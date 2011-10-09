@@ -7,3 +7,8 @@ src/.deps/**
 config.h
 config.log
 config.status
+
+Makefile
+src/Makefile
+src/emma
+stamp-h1
