@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <string>
 #include <cmath>
 #include <cstdlib>
 #include <sys/types.h>
@@ -63,13 +64,26 @@ int main(int argc,char* argv[])
         return 1;
     }
 
-    cout << "loading sections here\n";
-    // new sections(argv[optind]);
+    read_elf elf(string(argv[optind]));
 
-    // load_sections(argv[optind]);
-
-    cout << "showing sections here\n";
-    // show_sections();
+    const read_elf::filedata_s* fd;
+    fd=elf.section(".text");
+    cout << fd->a.index << ": " << fd->a.name << "\n";
+    cout << " VMA: 0x" << hex << fd->a.vma << dec << "\n";
+    cout << "Size: 0x" << hex << fd->a.size << dec << "\n";
+    cout << "Data: " << hex << (unsigned int)fd->b[0] << dec << "\n";
+    fd=elf.section(".bss");
+    cout << fd->a.index << ": " << fd->a.name << "\n";
+    cout << " VMA: 0x" << hex << fd->a.vma << dec << "\n";
+    cout << "Size: 0x" << hex << fd->a.size << dec << "\n";
+    fd=elf[13];
+    cout << fd->a.index << ": " << fd->a.name << "\n";
+    cout << " VMA: 0x" << hex << fd->a.vma << dec << "\n";
+    cout << "Size: 0x" << hex << fd->a.size << dec << "\n";
+    fd=elf[26];
+    cout << fd->a.index << ": " << fd->a.name << "\n";
+    cout << " VMA: 0x" << hex << fd->a.vma << dec << "\n";
+    cout << "Size: 0x" << hex << fd->a.size << dec << "\n";
 
     return 0;
 }

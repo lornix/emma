@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <string>
 #include <cmath>
 #include <cstdlib>
 
@@ -13,84 +14,89 @@
 
 using namespace std;
 
-vector<alldata> sections;
+read_elf::read_elf(string fname)
+{
+    int section_count=load_sections(fname);
+    if (section_count<0)
+        throw section_count;
+    cerr << "Loaded " << section_count << " sections\n";
+}
 
+read_elf::~read_elf()
+{
+    // not sure what to do for destroying the filedata vector,
+    // it's built from mallocs by bfd_..., icky.
+}
+
+const read_elf::filedata_s* read_elf::operator[](unsigned int index)
+{
+    // unsigned .. can't be negative, just check upper bound
+    if (index<filedata.size()) {
+        return &filedata[index];
+    }
+    return 0;
+
+}
+
+const read_elf::filedata_s* read_elf::section(string name)
+{
+    for (unsigned int i=0; i<filedata.size(); i++) {
+        if (name==string(filedata[i].a.name))
+            return &filedata[i];
+    }
+    return 0;
+}
+
+// grab_section NOT in read_elf class due to weird pointer
+// mutations involved that I don't know how to fix yet
 void grab_section(bfd* b,asection* s,void* vv)
 {
-    // convert pointer from (void*) to (alldata*)
-    vector<alldata>*v=static_cast<vector<alldata>*>(vv);
+    // convert pointer from (void*) to (filedata_s*)
+    vector<read_elf::filedata_s>*v=reinterpret_cast<vector<read_elf::filedata_s>*>(vv);
 
-    // create a new 'alldata' unit
-    alldata ad;
+    // create a new 'filedata_s' unit
+    read_elf::filedata_s fd;
     // save the section data
-    ad.a=*s;
+    fd.a=*s;
     // retrieve and save the section data contents
-    bfd_malloc_and_get_section(b,s,&ad.b);
+    bfd_malloc_and_get_section(b,s,&fd.b);
 
     // stuff it into storage
-    v->push_back(ad);
+    v->push_back(fd);
 }
 
-void show_sections()
+int read_elf::load_sections(string fname)
 {
-    for (vector<alldata>::iterator i=sections.begin(); i!=sections.end(); i++) {
-        cout << i->a.index << ": " << i->a.name << "\n";
-        cout << "\t        VMA: 0x" << hex << i->a.vma << dec << "\n";
-        cout << "\tFile Offset: 0x" << hex << i->a.filepos << dec << "\n";
-        cout << "\t       size: 0x" << hex << i->a.size << dec << "\n";
-    }
-}
+    const char* target="elf32-i386";
 
-const char* target="elf32-i386";
-
-int load_sections(const char* fname)
-{
     // initialize bfd systems
     bfd_init();
 
     if (!bfd_set_default_target(target)) {
         bfd_perror("Can't set BFD default target");
-        return 1;
+        return -1;
     }
 
     // open desired file
-    bfd* bfile=bfd_openr(fname,target);
+    bfd* bfile=bfd_openr(fname.c_str(),target);
     if (!bfile) {
         cerr << "Error opening " << fname << "\n";
-        return 1;
+        return -2;
     }
     if (!bfd_check_format(bfile,bfd_object)) {
         bfd_perror(NULL);
+        return -3;
     }
-
-    cout << "File size: " << bfd_get_size(bfile) << "\n";
-
-    cout << "# Sections: " << bfd_count_sections(bfile) << "\n";
-
-    cout << "\n";
 
     int elf_header_size=bfd_get_elf_phdr_upper_bound(bfile);
     unsigned char elf_header[elf_header_size];
-    int elf_count=bfd_get_elf_phdrs(bfile,&elf_header);
+    // load the header data, discard the count retval
+    // int elf_count=bfd_get_elf_phdrs(bfile,&elf_header);
+    bfd_get_elf_phdrs(bfile,&elf_header);
 
-    cout << elf_count << " ELF headers read (" << elf_header_size << " bytes)";
-    // {
-    //     int linecount=0;
-    //     for (int i=0; i<elf_header_size; i++) {
-    //         if (linecount==0)
-    //             printf("\n%8x: ",i);
-    //         printf("%02x ",elf_header[i]);
-    //         if ((linecount%4)==3)
-    //             printf(" ");
-    //         linecount=(linecount+1)%16;
-    //     }
-    //     cout << "\n";
-    // }
-
-    cout << "\n";
-
-    bfd_map_over_sections(bfile,grab_section,&sections);
+    bfd_map_over_sections(bfile,grab_section,&filedata);
     bfd_close(bfile);
 
-    return 0;
+    // return count of sections loaded
+    return filedata.size();
 }
