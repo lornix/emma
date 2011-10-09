@@ -1,7 +1,7 @@
-/* emma - read_file.h */
+/* emma - read_elf.h */
 
-#ifndef READ_FILE_H
-#define READ_FILE_H
+#ifndef READ_ELF_H
+#define READ_ELF_H
 
 struct alldata {
     asection a;

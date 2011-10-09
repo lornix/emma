@@ -9,7 +9,7 @@
 #include "../config.h"
 
 #include "emma.h"
-#include "read_file.h"
+#include "read_elf.h"
 
 using namespace std;
 
