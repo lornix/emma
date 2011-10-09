@@ -3,12 +3,13 @@ syntax: glob
 autom4te.cache/**
 src/.deps/**
 **.o
+**~
 
 config.h
 config.log
 config.status
 
 Makefile
-src/Makefile
+**/Makefile
 src/emma
 stamp-h1
