@@ -8,14 +8,12 @@
 
 #include "../config.h"
 
+#include "emma.h"
+#include "read_file.h"
+
 using namespace std;
 
-const int maxlen = 40;
-
-struct alldata {
-    asection a;
-    bfd_byte* b;
-};
+vector<alldata> sections;
 
 void grab_section(bfd* b,asection* s,void* vv)
 {
@@ -33,15 +31,20 @@ void grab_section(bfd* b,asection* s,void* vv)
     v->push_back(ad);
 }
 
+void show_sections()
+{
+    for (vector<alldata>::iterator i=sections.begin(); i!=sections.end(); i++) {
+        cout << i->a.index << ": " << i->a.name << "\n";
+        cout << "\t        VMA: 0x" << hex << i->a.vma << dec << "\n";
+        cout << "\tFile Offset: 0x" << hex << i->a.filepos << dec << "\n";
+        cout << "\t       size: 0x" << hex << i->a.size << dec << "\n";
+    }
+}
+
 const char* target="elf32-i386";
 
-int main(int argc,char* argv[])
+int load_sections(const char* fname)
 {
-    if (argc<2) {
-        cerr << "Need a filename\n";
-        return 1;
-    }
-
     // initialize bfd systems
     bfd_init();
 
@@ -51,9 +54,9 @@ int main(int argc,char* argv[])
     }
 
     // open desired file
-    bfd* bfile=bfd_openr(argv[1],target);
+    bfd* bfile=bfd_openr(fname,target);
     if (!bfile) {
-        cerr << "Error opening " << argv[1] << "\n";
+        cerr << "Error opening " << fname << "\n";
         return 1;
     }
     if (!bfd_check_format(bfile,bfd_object)) {
@@ -86,16 +89,8 @@ int main(int argc,char* argv[])
 
     cout << "\n";
 
-    vector<alldata> sections;
     bfd_map_over_sections(bfile,grab_section,&sections);
     bfd_close(bfile);
-
-    for (vector<alldata>::iterator i=sections.begin(); i!=sections.end(); i++) {
-        cout << i->a.index << ": " << i->a.name << "\n";
-        cout << "\t        VMA: 0x" << hex << i->a.vma << dec << "\n";
-        cout << "\tFile Offset: 0x" << hex << i->a.filepos << dec << "\n";
-        cout << "\t       size: 0x" << hex << i->a.size << dec << "\n";
-    }
 
     return 0;
 }
