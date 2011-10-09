@@ -1,2 +1,2 @@
 bin_PROGRAMS=emma
-emma_SOURCES=emma.cpp
+emma_SOURCES=main.cpp read_file.cpp
