@@ -2601,6 +2601,9 @@ am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
 
 
 
+#
+# prevent configure from setting CXXFLAGS=-g -O2
+:${CXXFLAGS=""}
 
 # Checks for programs.
 ac_ext=cpp

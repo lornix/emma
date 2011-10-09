@@ -4,7 +4,10 @@
 AC_PREREQ([2.68])
 AC_INIT([emma], [0.1], [lornix@lornix.com])
 #
-AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign dist-bzip2])
+#
+# prevent configure from setting CXXFLAGS=-g -O2
+:${CXXFLAGS=""}
 
 # Checks for programs.
 AC_PROG_CXX

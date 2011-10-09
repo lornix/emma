@@ -6,6 +6,8 @@
 #include <bfd.h>
 #include <dis-asm.h>
 
+#include "../config.h"
+
 using namespace std;
 
 const int maxlen = 40;
