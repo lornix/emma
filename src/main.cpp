@@ -18,6 +18,50 @@
 
 using namespace std;
 
+string show_sec_flags(int flags)
+{
+#define ssf(x) if (flags&SEC_ ## x) retval+=" " #x;
+    string retval;
+    // if (flags==SEC_NO_FLAGS) retval+=" None";
+    ssf(ALLOC);
+    ssf(LOAD);
+    ssf(RELOC);
+    ssf(READONLY);
+    ssf(CODE);
+    ssf(DATA);
+    ssf(ROM);
+    ssf(CONSTRUCTOR);
+    ssf(HAS_CONTENTS);
+    ssf(NEVER_LOAD);
+    ssf(THREAD_LOCAL);
+    ssf(HAS_GOT_REF);
+    ssf(IS_COMMON);
+    ssf(DEBUGGING);
+    ssf(IN_MEMORY);
+    ssf(EXCLUDE);
+    ssf(SORT_ENTRIES);
+    ssf(LINK_ONCE);
+    ssf(LINK_DUPLICATES);
+    ssf(LINK_DUPLICATES_DISCARD);
+    ssf(LINK_DUPLICATES_ONE_ONLY);
+    ssf(LINK_DUPLICATES_SAME_SIZE);
+    ssf(LINKER_CREATED);
+    ssf(KEEP);
+    ssf(SMALL_DATA);
+    ssf(MERGE);
+    ssf(STRINGS);
+    ssf(GROUP);
+    ssf(COFF_SHARED_LIBRARY);
+    ssf(ELF_REVERSE_COPY);
+    ssf(COFF_SHARED);
+    ssf(TIC54X_BLOCK);
+    ssf(TIC54X_CLINK);
+    ssf(COFF_NOREAD);
+
+    retval+="\n";
+    return retval;
+}
+
 void help_usage()
 {
     cout << "usage: emma [option]... [file]\n";
@@ -66,24 +110,28 @@ int main(int argc,char* argv[])
 
     read_elf elf(string(argv[optind]));
 
-    const read_elf::filedata_s* fd;
-    fd=elf.section(".text");
-    cout << fd->a.index << ": " << fd->a.name << "\n";
-    cout << " VMA: 0x" << hex << fd->a.vma << dec << "\n";
-    cout << "Size: 0x" << hex << fd->a.size << dec << "\n";
-    cout << "Data: " << hex << (unsigned int)fd->b[0] << dec << "\n";
-    fd=elf.section(".bss");
-    cout << fd->a.index << ": " << fd->a.name << "\n";
-    cout << " VMA: 0x" << hex << fd->a.vma << dec << "\n";
-    cout << "Size: 0x" << hex << fd->a.size << dec << "\n";
-    fd=elf[13];
-    cout << fd->a.index << ": " << fd->a.name << "\n";
-    cout << " VMA: 0x" << hex << fd->a.vma << dec << "\n";
-    cout << "Size: 0x" << hex << fd->a.size << dec << "\n";
-    fd=elf[26];
-    cout << fd->a.index << ": " << fd->a.name << "\n";
-    cout << " VMA: 0x" << hex << fd->a.vma << dec << "\n";
-    cout << "Size: 0x" << hex << fd->a.size << dec << "\n";
+    for (unsigned int i=0; i<elf.size(); i++) {
+        const read_elf::filedata_s* fd;
+        fd=elf[i];
+        if (fd->a.flags&SEC_DEBUGGING) continue;
+        cout << fd->a.index << ": " << fd->a.name << "\n";
+        cout << "  VMA: 0x" << hex << fd->a.vma << dec << "\n";
+        cout << " Size: 0x" << hex << fd->a.size << dec << "\n";
+        cout << "Flags: 0x" << hex << fd->a.flags << dec << show_sec_flags(fd->a.flags);
+        cout << "\n";
+    }
+    cout << "\n";
+    // show debugging sections
+    for (unsigned int i=0; i<elf.size(); i++) {
+        const read_elf::filedata_s* fd;
+        fd=elf[i];
+        if (!(fd->a.flags&SEC_DEBUGGING)) continue;
+        cout << fd->a.index << ": " << fd->a.name << "\n";
+        cout << "  VMA: 0x" << hex << fd->a.vma << dec << "\n";
+        cout << " Size: 0x" << hex << fd->a.size << dec << "\n";
+        cout << "Flags: 0x" << hex << fd->a.flags << dec << show_sec_flags(fd->a.flags);
+        cout << "\n";
+    }
 
     return 0;
 }

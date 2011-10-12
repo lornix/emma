@@ -16,10 +16,11 @@ using namespace std;
 
 read_elf::read_elf(string fname)
 {
-    int section_count=load_sections(fname);
-    if (section_count<0)
-        throw section_count;
-    cerr << "Loaded " << section_count << " sections\n";
+    int count=load_sections(fname);
+    if (count<0)
+        throw count;
+    section_count=count;
+    cerr << "Loaded " << count << " sections\n";
 }
 
 read_elf::~read_elf()
@@ -28,19 +29,23 @@ read_elf::~read_elf()
     // it's built from mallocs by bfd_..., icky.
 }
 
+unsigned int read_elf::size()
+{
+    return section_count;
+}
+
 const read_elf::filedata_s* read_elf::operator[](unsigned int index)
 {
     // unsigned .. can't be negative, just check upper bound
-    if (index<filedata.size()) {
+    if (index<section_count) {
         return &filedata[index];
     }
     return 0;
-
 }
 
 const read_elf::filedata_s* read_elf::section(string name)
 {
-    for (unsigned int i=0; i<filedata.size(); i++) {
+    for (unsigned int i=0; i<section_count; i++) {
         if (name==string(filedata[i].a.name))
             return &filedata[i];
     }

@@ -16,11 +16,14 @@ class read_elf
     ~read_elf();
     const filedata_s* section(std::string name);
     const filedata_s* operator[](unsigned int index);
+    unsigned int size();
  private:
     // object types we handle at the moment
     std::vector<filedata_s> filedata;
     int load_sections(std::string fname);
     friend void grab_section(bfd* b,asection* s,void* vv);
+ private:
+    unsigned int section_count;
 };
 
 #endif
