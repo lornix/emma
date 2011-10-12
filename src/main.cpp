@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <getopt.h>
 
+#include <elf.h>
 #include <bfd.h>
 #include <dis-asm.h>
 
@@ -15,6 +16,7 @@
 
 #include "emma.h"
 #include "read_elf.h"
+#include "readelf32.h"
 
 using namespace std;
 
