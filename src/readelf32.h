@@ -12,12 +12,13 @@ class readelf32
         bfd_byte* b;
     };
     //
-    readelf32(const char* fname) throw(std::string);
-    readelf32(std::string fname) throw(std::string);
+    readelf32(const char* fname);
+    readelf32(std::string fname);
     ~readelf32();
  private:
     std::string filename;
     Elf32_Ehdr elf_hdr;
+    unsigned int exec_addr;
 };
 
 #endif
