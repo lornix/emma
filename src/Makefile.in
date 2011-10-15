@@ -153,7 +153,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_CXXFLAGS = -Wall -Wextra -Wundef -ggdb3 -Werror
+AM_CXXFLAGS = -Wall -Wextra -Wundef -Werror -ggdb3 -O0
 emma_SOURCES = main.cpp read_elf.cpp readelf32.cpp
 all: all-am
 

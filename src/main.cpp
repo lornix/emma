@@ -19,50 +19,6 @@
 
 using namespace std;
 
-string show_sec_flags(int flags)
-{
-#define ssf(x) if (flags&SEC_ ## x) retval+=" " #x;
-    string retval;
-    // if (flags==SEC_NO_FLAGS) retval+=" None";
-    ssf(ALLOC);
-    ssf(LOAD);
-    ssf(RELOC);
-    ssf(READONLY);
-    ssf(CODE);
-    ssf(DATA);
-    ssf(ROM);
-    ssf(CONSTRUCTOR);
-    ssf(HAS_CONTENTS);
-    ssf(NEVER_LOAD);
-    ssf(THREAD_LOCAL);
-    ssf(HAS_GOT_REF);
-    ssf(IS_COMMON);
-    ssf(DEBUGGING);
-    ssf(IN_MEMORY);
-    ssf(EXCLUDE);
-    ssf(SORT_ENTRIES);
-    ssf(LINK_ONCE);
-    ssf(LINK_DUPLICATES);
-    ssf(LINK_DUPLICATES_DISCARD);
-    ssf(LINK_DUPLICATES_ONE_ONLY);
-    ssf(LINK_DUPLICATES_SAME_SIZE);
-    ssf(LINKER_CREATED);
-    ssf(KEEP);
-    ssf(SMALL_DATA);
-    ssf(MERGE);
-    ssf(STRINGS);
-    ssf(GROUP);
-    ssf(COFF_SHARED_LIBRARY);
-    ssf(ELF_REVERSE_COPY);
-    ssf(COFF_SHARED);
-    ssf(TIC54X_BLOCK);
-    ssf(TIC54X_CLINK);
-    ssf(COFF_NOREAD);
-
-    retval+="\n";
-    return retval;
-}
-
 void help_usage()
 {
     cout << "usage: emma [option]... [file]\n";
@@ -102,31 +58,16 @@ int main(int argc,char* argv[])
     readelf32 elf32(argv[optind]);
 
     cout << "\n";
-    cout << "Standard Sections\n";
+    cout << "Sections\n";
     cout << "=================\n";
-    // for (unsigned int i=0; i<elf32.size(); i++) {
-        // const readelf32::filedata_s* fd;
-        // fd=elf[i];
-        // if (fd->a.flags&SEC_DEBUGGING) continue;
-        // cout << fd->a.index << ": " << fd->a.name << "\n";
-        // cout << "  VMA: 0x" << hex << fd->a.vma << dec << "\n";
-        // cout << " Size: 0x" << hex << fd->a.size << dec << "\n";
-        // cout << "Flags: 0x" << hex << fd->a.flags << dec << show_sec_flags(fd->a.flags);
-        // cout << "\n";
-    // }
-    cout << "\n=====\n\n";
-    cout << "Debugging Sections\n";
-    cout << "==================\n";
-    // for (unsigned int i=0; i<elf32.size(); i++) {
-        // const read_elf::filedata_s* fd;
-        // fd=elf[i];
-        // if (!(fd->a.flags&SEC_DEBUGGING)) continue;
-        // cout << fd->a.index << ": " << fd->a.name << "\n";
-        // cout << "  VMA: 0x" << hex << fd->a.vma << dec << "\n";
-        // cout << " Size: 0x" << hex << fd->a.size << dec << "\n";
-        // cout << "Flags: 0x" << hex << fd->a.flags << dec << show_sec_flags(fd->a.flags);
-        // cout << "\n";
-    // }
+    for (unsigned int i=0; i<elf32.sec_headers.size(); i++) {
+        cout << i << ": " << elf32.sec_name(i) << "\n";
+        cout << "  VMA: 0x" << hex << elf32.sec_headers[i]->sh_addr << dec << "\n";
+        cout << " Size: 0x" << hex << elf32.sec_headers[i]->sh_size << dec << "\n";
+        cout << " Type: 0x" << hex << elf32.sec_headers[i]->sh_type << dec << " " << elf32.show_sec_type(i) << "\n";
+        cout << "Flags: 0x" << hex << elf32.sec_headers[i]->sh_flags << dec << elf32.show_sec_flags(i) << "\n";
+        cout << "\n";
+    }
 
     return 0;
 }
