@@ -3,8 +3,8 @@
 #include <string>
 #include <cmath>
 #include <cstdlib>
-#include <sys/types.h>
-#include <sys/stat.h>
+
+// for getopt_long
 #include <unistd.h>
 #include <getopt.h>
 
@@ -15,7 +15,6 @@
 #include "../config.h"
 
 #include "emma.h"
-#include "read_elf.h"
 #include "readelf32.h"
 
 using namespace std;
@@ -98,42 +97,36 @@ int main(int argc,char* argv[])
         cerr << "Please provide a filename to process\n";
         return 1;
     }
-    // no, see if file exists
-    struct stat statbuf;
-    if (stat(argv[optind],&statbuf)) {
-        perror("Unable to open file");
-        return 1;
-    }
-    // but is it a REAL file?
-    if (!S_ISREG(statbuf.st_mode)) {
-        cerr << "Not a regular file\n";
-        return 1;
-    }
 
-    read_elf elf(string(argv[optind]));
+    // load in file data
+    readelf32 elf32(argv[optind]);
 
-    for (unsigned int i=0; i<elf.size(); i++) {
-        const read_elf::filedata_s* fd;
-        fd=elf[i];
-        if (fd->a.flags&SEC_DEBUGGING) continue;
-        cout << fd->a.index << ": " << fd->a.name << "\n";
-        cout << "  VMA: 0x" << hex << fd->a.vma << dec << "\n";
-        cout << " Size: 0x" << hex << fd->a.size << dec << "\n";
-        cout << "Flags: 0x" << hex << fd->a.flags << dec << show_sec_flags(fd->a.flags);
-        cout << "\n";
-    }
     cout << "\n";
-    // show debugging sections
-    for (unsigned int i=0; i<elf.size(); i++) {
-        const read_elf::filedata_s* fd;
-        fd=elf[i];
-        if (!(fd->a.flags&SEC_DEBUGGING)) continue;
-        cout << fd->a.index << ": " << fd->a.name << "\n";
-        cout << "  VMA: 0x" << hex << fd->a.vma << dec << "\n";
-        cout << " Size: 0x" << hex << fd->a.size << dec << "\n";
-        cout << "Flags: 0x" << hex << fd->a.flags << dec << show_sec_flags(fd->a.flags);
-        cout << "\n";
-    }
+    cout << "Standard Sections\n";
+    cout << "=================\n";
+    // for (unsigned int i=0; i<elf32.size(); i++) {
+        // const readelf32::filedata_s* fd;
+        // fd=elf[i];
+        // if (fd->a.flags&SEC_DEBUGGING) continue;
+        // cout << fd->a.index << ": " << fd->a.name << "\n";
+        // cout << "  VMA: 0x" << hex << fd->a.vma << dec << "\n";
+        // cout << " Size: 0x" << hex << fd->a.size << dec << "\n";
+        // cout << "Flags: 0x" << hex << fd->a.flags << dec << show_sec_flags(fd->a.flags);
+        // cout << "\n";
+    // }
+    cout << "\n=====\n\n";
+    cout << "Debugging Sections\n";
+    cout << "==================\n";
+    // for (unsigned int i=0; i<elf32.size(); i++) {
+        // const read_elf::filedata_s* fd;
+        // fd=elf[i];
+        // if (!(fd->a.flags&SEC_DEBUGGING)) continue;
+        // cout << fd->a.index << ": " << fd->a.name << "\n";
+        // cout << "  VMA: 0x" << hex << fd->a.vma << dec << "\n";
+        // cout << " Size: 0x" << hex << fd->a.size << dec << "\n";
+        // cout << "Flags: 0x" << hex << fd->a.flags << dec << show_sec_flags(fd->a.flags);
+        // cout << "\n";
+    // }
 
     return 0;
 }
