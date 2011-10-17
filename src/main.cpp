@@ -57,15 +57,30 @@ int main(int argc,char* argv[])
     // load in file data
     readelf32 elf32(argv[optind]);
 
+    // cout << "\n";
+    // cout << "Sections\n";
+    // cout << "=================\n";
+    // for (unsigned int i=0; i<elf32.sec_headers.size(); i++) {
+    //     cout << i << ": " << elf32.sec_name(i) << "\n";
+    //     cout << "  VMA: 0x" << hex << elf32.sec_headers[i]->sh_addr << dec << "\n";
+    //     cout << " Size: 0x" << hex << elf32.sec_headers[i]->sh_size << dec << "\n";
+    //     cout << " Type: 0x" << hex << elf32.sec_headers[i]->sh_type << dec << " " << elf32.show_sec_type(i) << "\n";
+    //     cout << "Flags: 0x" << hex << elf32.sec_headers[i]->sh_flags << dec << elf32.show_sec_flags(i) << "\n";
+    //     cout << "\n";
+    // }
     cout << "\n";
-    cout << "Sections\n";
+    cout << "Program Sections\n";
     cout << "=================\n";
-    for (unsigned int i=0; i<elf32.sec_headers.size(); i++) {
-        cout << i << ": " << elf32.sec_name(i) << "\n";
-        cout << "  VMA: 0x" << hex << elf32.sec_headers[i]->sh_addr << dec << "\n";
-        cout << " Size: 0x" << hex << elf32.sec_headers[i]->sh_size << dec << "\n";
-        cout << " Type: 0x" << hex << elf32.sec_headers[i]->sh_type << dec << " " << elf32.show_sec_type(i) << "\n";
-        cout << "Flags: 0x" << hex << elf32.sec_headers[i]->sh_flags << dec << elf32.show_sec_flags(i) << "\n";
+    for (unsigned int i=0; i<elf32.prg_headers.size(); i++) {
+        cout << i << ": " << "\n";
+        cout << "  Type: 0x" << hex << elf32.prg_headers[i]->p_type << dec << " " << elf32.show_prg_type(i) << "\n";
+        cout << "Offset: 0x" << hex << elf32.prg_headers[i]->p_offset << dec << "\n";
+        cout << " Vaddr: 0x" << hex << elf32.prg_headers[i]->p_vaddr << dec << "\n";
+        cout << " Paddr: 0x" << hex << elf32.prg_headers[i]->p_paddr << dec << "\n";
+        cout << "Pfsize: 0x" << hex << elf32.prg_headers[i]->p_filesz << dec << "\n";
+        cout << "Pmemsz: 0x" << hex << elf32.prg_headers[i]->p_memsz << dec << "\n";
+        cout << " Flags: 0x" << hex << elf32.prg_headers[i]->p_flags << dec << elf32.show_prg_flags(i) << "\n";
+        cout << " Align: 0x" << hex << elf32.prg_headers[i]->p_align << dec << "\n";
         cout << "\n";
     }
 

@@ -223,8 +223,6 @@ std::string readelf32::show_sec_type(unsigned int section_num)
             retval="Section Group"; break;
         case SHT_SYMTAB_SHNDX:
             retval="Extended Section Indices"; break;
-        case SHT_NUM:
-            retval="Number of defined types"; break;
         case SHT_GNU_ATTRIBUTES:
             retval="Object Attributes"; break;
         case SHT_GNU_HASH:
@@ -239,6 +237,49 @@ std::string readelf32::show_sec_type(unsigned int section_num)
             retval="Version Needs Section"; break;
         case SHT_GNU_versym:
             retval="Version Symbol Table"; break;
+        default:
+            retval="Not a clue: "+types; break;
+    }
+    return retval;
+}
+std::string readelf32::show_prg_flags(unsigned int prg_section)
+{
+    std::string retval;
+    unsigned int flags=prg_headers[prg_section]->p_flags;
+    if (flags&PF_R) retval+=" R";
+    if (flags&PF_W) retval+=" W";
+    if (flags&PF_X) retval+=" X";
+    return retval;
+}
+std::string readelf32::show_prg_type(unsigned int prg_section)
+{
+    std::string retval;
+    unsigned int types=prg_headers[prg_section]->p_type;
+    switch (types) {
+        case PT_NULL:
+            retval="Program Header Table Entry"; break;
+        case PT_LOAD:
+            retval="Loadable Program Segment"; break;
+        case PT_DYNAMIC:
+            retval="Dynamic Linking Information"; break;
+        case PT_INTERP:
+            retval="Program Interpreter"; break;
+        case PT_NOTE:
+            retval="Auxiliary Information"; break;
+        case PT_SHLIB:
+            retval="Reserved (SHLIB)"; break;
+        case PT_PHDR:
+            retval="Entry for header table itself"; break;
+        case PT_TLS:
+            retval="Thread-local storage segment"; break;
+        case PT_GNU_EH_FRAME:
+            retval="GCC .eh_frame_hdr segment"; break;
+        case PT_GNU_STACK:
+            retval="Stack executable"; break;
+        case PT_GNU_RELRO:
+            retval="Read-Only after relocation"; break;
+        default:
+            retval="Not a clue: "+types; break;
     }
     return retval;
 }

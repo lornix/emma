@@ -18,6 +18,8 @@ class readelf32
     const unsigned char* sec_name(unsigned int section_num);
     std::string show_sec_flags(unsigned int section_num);
     std::string show_sec_type(unsigned int section_num);
+    std::string show_prg_flags(unsigned int prg_section);
+    std::string show_prg_type(unsigned int prg_section);
  private:
     std::string filename;
     // information from the elf_hdr
