@@ -45,7 +45,8 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_emma_OBJECTS = main.$(OBJEXT) readelf32.$(OBJEXT) utils.$(OBJEXT)
+am_emma_OBJECTS = main.$(OBJEXT) readelf32.$(OBJEXT) utils.$(OBJEXT) \
+	options.$(OBJEXT)
 emma_OBJECTS = $(am_emma_OBJECTS)
 emma_LDADD = $(LDADD)
 am_hello_world_c_OBJECTS = hello_world_c.$(OBJEXT)
@@ -163,7 +164,7 @@ AM_CXXFLAGS = -Wall -Wextra -Wundef -Werror -ggdb3 -O0
 #
 AM_CFLAGS = -Wall -Wextra -Wundef -Werror -ggdb3 -O0
 #
-emma_SOURCES = main.cpp readelf32.cpp utils.cpp
+emma_SOURCES = main.cpp readelf32.cpp utils.cpp options.cpp
 #
 hello_world_c_SOURCES = hello_world_c.c
 all: all-am
@@ -252,6 +253,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hello_world_c.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/options.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/readelf32.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utils.Po@am__quote@
 

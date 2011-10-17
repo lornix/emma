@@ -1,8 +1,5 @@
-#include <string>
+/* emma - utils.cpp */
 
-#include "../config.h"
-
-#include "emma.h"
 #include "utils.h"
 
 std::string hexval(unsigned long val,unsigned int len)

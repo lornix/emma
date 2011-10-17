@@ -12,6 +12,6 @@ AM_CFLAGS+=-O0
 #
 bin_PROGRAMS=emma hello_world_c
 #
-emma_SOURCES=main.cpp readelf32.cpp utils.cpp
+emma_SOURCES=main.cpp readelf32.cpp utils.cpp options.cpp
 #
 hello_world_c_SOURCES=hello_world_c.c

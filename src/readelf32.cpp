@@ -1,32 +1,8 @@
-#include <iostream>
-#include <vector>
-#include <string>
-#include <cmath>
-#include <cstdlib>
-#include <sys/types.h>
-#include <sys/stat.h>
-// for strncasecmp
-#include <cstring>
-// for errno
-#include <cerrno>
+/* emma - readelf32.cpp */
 
-#include <elf.h>
-#include <dis-asm.h>
-
-#include "../config.h"
-
-#include "emma.h"
 #include "readelf32.h"
 
-// using namespace std;
-
 readelf32::readelf32(std::string fname)
-{
-    // allows use of a string to specify filename
-    readelf32(fname.c_str());
-}
-
-readelf32::readelf32(const char* fname)
 {
     // initialize to null
     fdata=0;
@@ -34,12 +10,12 @@ readelf32::readelf32(const char* fname)
     std::cerr << "Reading '" << fname << "'\n";
 
     // save filename for later use
-    filename=std::string(fname);
+    filename=fname;
 
     try {
         // see if file exists
         struct stat statbuf;
-        if (stat(fname,&statbuf)) {
+        if (stat(fname.c_str(),&statbuf)) {
             throw std::string("File does not exist");
         }
         // yes, but is it a REAL file?
@@ -47,7 +23,7 @@ readelf32::readelf32(const char* fname)
             throw std::string("Not a regular file");
         }
         // whew! attempt to open this file
-        FILE* ifile=fopen(fname,"rb");
+        FILE* ifile=fopen(fname.c_str(),"rb");
         if (!ifile) {
             throw std::string("Unable to open file");
         }
