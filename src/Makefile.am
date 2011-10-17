@@ -10,8 +10,13 @@ AM_CFLAGS+=-Werror
 AM_CFLAGS+=-ggdb3
 AM_CFLAGS+=-O0
 #
-bin_PROGRAMS=emma hello_world_c
+bin_PROGRAMS=
 #
+bin_PROGRAMS+=emma
 emma_SOURCES=main.cpp readelf32.cpp utils.cpp options.cpp
 #
+bin_PROGRAMS+=hello_world_c
 hello_world_c_SOURCES=hello_world_c.c
+hello_world_c_CFLAGS=-Wall -Wextra -Wundef
+hello_world_c_CFLAGS+=-Werror
+hello_world_c_CFLAGS+=-O0

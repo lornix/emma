@@ -49,9 +49,11 @@ am_emma_OBJECTS = main.$(OBJEXT) readelf32.$(OBJEXT) utils.$(OBJEXT) \
 	options.$(OBJEXT)
 emma_OBJECTS = $(am_emma_OBJECTS)
 emma_LDADD = $(LDADD)
-am_hello_world_c_OBJECTS = hello_world_c.$(OBJEXT)
+am_hello_world_c_OBJECTS = hello_world_c-hello_world_c.$(OBJEXT)
 hello_world_c_OBJECTS = $(am_hello_world_c_OBJECTS)
 hello_world_c_LDADD = $(LDADD)
+hello_world_c_LINK = $(CCLD) $(hello_world_c_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -163,10 +165,9 @@ top_srcdir = @top_srcdir@
 AM_CXXFLAGS = -Wall -Wextra -Wundef -Werror -ggdb3 -O0
 #
 AM_CFLAGS = -Wall -Wextra -Wundef -Werror -ggdb3 -O0
-#
 emma_SOURCES = main.cpp readelf32.cpp utils.cpp options.cpp
-#
 hello_world_c_SOURCES = hello_world_c.c
+hello_world_c_CFLAGS = -Wall -Wextra -Wundef -Werror -O0
 all: all-am
 
 .SUFFIXES:
@@ -243,7 +244,7 @@ emma$(EXEEXT): $(emma_OBJECTS) $(emma_DEPENDENCIES)
 	$(CXXLINK) $(emma_OBJECTS) $(emma_LDADD) $(LIBS)
 hello_world_c$(EXEEXT): $(hello_world_c_OBJECTS) $(hello_world_c_DEPENDENCIES) 
 	@rm -f hello_world_c$(EXEEXT)
-	$(LINK) $(hello_world_c_OBJECTS) $(hello_world_c_LDADD) $(LIBS)
+	$(hello_world_c_LINK) $(hello_world_c_OBJECTS) $(hello_world_c_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -251,7 +252,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hello_world_c.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hello_world_c-hello_world_c.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/options.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/readelf32.Po@am__quote@
@@ -270,6 +271,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
+
+hello_world_c-hello_world_c.o: hello_world_c.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(hello_world_c_CFLAGS) $(CFLAGS) -MT hello_world_c-hello_world_c.o -MD -MP -MF $(DEPDIR)/hello_world_c-hello_world_c.Tpo -c -o hello_world_c-hello_world_c.o `test -f 'hello_world_c.c' || echo '$(srcdir)/'`hello_world_c.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/hello_world_c-hello_world_c.Tpo $(DEPDIR)/hello_world_c-hello_world_c.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='hello_world_c.c' object='hello_world_c-hello_world_c.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(hello_world_c_CFLAGS) $(CFLAGS) -c -o hello_world_c-hello_world_c.o `test -f 'hello_world_c.c' || echo '$(srcdir)/'`hello_world_c.c
+
+hello_world_c-hello_world_c.obj: hello_world_c.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(hello_world_c_CFLAGS) $(CFLAGS) -MT hello_world_c-hello_world_c.obj -MD -MP -MF $(DEPDIR)/hello_world_c-hello_world_c.Tpo -c -o hello_world_c-hello_world_c.obj `if test -f 'hello_world_c.c'; then $(CYGPATH_W) 'hello_world_c.c'; else $(CYGPATH_W) '$(srcdir)/hello_world_c.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/hello_world_c-hello_world_c.Tpo $(DEPDIR)/hello_world_c-hello_world_c.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='hello_world_c.c' object='hello_world_c-hello_world_c.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(hello_world_c_CFLAGS) $(CFLAGS) -c -o hello_world_c-hello_world_c.obj `if test -f 'hello_world_c.c'; then $(CYGPATH_W) 'hello_world_c.c'; else $(CYGPATH_W) '$(srcdir)/hello_world_c.c'; fi`
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
