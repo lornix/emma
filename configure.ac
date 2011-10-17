@@ -24,6 +24,8 @@ AC_CONFIG_HEADERS([config.h])
 #
 # prevent configure from setting CXXFLAGS=-g -O2
 :${CXXFLAGS=""}
+# prevent configure from setting CFLAGS=-g -O2
+:${CFLAGS=""}
 #
 # Checks for programs.
 AC_PROG_CXX

@@ -192,55 +192,55 @@ std::string readelf32::show_sec_type(unsigned int section_num)
         case SHT_NULL:
             retval="Null"; break;
         case SHT_PROGBITS:
-            retval="Program Data"; break;
+            retval="Program_Data"; break;
         case SHT_SYMTAB:
-            retval="Symbol Table"; break;
+            retval="Symbol_Table"; break;
         case SHT_STRTAB:
-            retval="String Table"; break;
+            retval="String_Table"; break;
         case SHT_RELA:
-            retval="Relocation Entries (addends)"; break;
+            retval="Relocation_Entries_(addends)"; break;
         case SHT_HASH:
-            retval="Symbol Hash Table"; break;
+            retval="Symbol_Hash_Table"; break;
         case SHT_DYNAMIC:
-            retval="Dynamic Linking"; break;
+            retval="Dynamic_Linking"; break;
         case SHT_NOTE:
             retval="Notes"; break;
         case SHT_NOBITS:
             retval="NoBits"; break;
         case SHT_REL:
-            retval="Relocation Entries (no addends)"; break;
+            retval="Relocation_Entries_(no addends)"; break;
         case SHT_SHLIB:
-            retval="Reserved (SHLIB)"; break;
+            retval="Reserved_(SHLIB)"; break;
         case SHT_DYNSYM:
-            retval="Dynamic Linker Symbol Table"; break;
+            retval="Dynamic_Linker_Symbol_Table"; break;
         case SHT_INIT_ARRAY:
-            retval="Array of Constructors"; break;
+            retval="Array_of_Constructors"; break;
         case SHT_FINI_ARRAY:
-            retval="Array of Destructors"; break;
+            retval="Array_of_Destructors"; break;
         case SHT_PREINIT_ARRAY:
-            retval="Array of Pre-Constructors"; break;
+            retval="Array_of_Pre-Constructors"; break;
         case SHT_GROUP:
-            retval="Section Group"; break;
+            retval="Section_Group"; break;
         case SHT_SYMTAB_SHNDX:
-            retval="Extended Section Indices"; break;
+            retval="Extended_Section_Indices"; break;
         case SHT_GNU_ATTRIBUTES:
-            retval="Object Attributes"; break;
+            retval="Object_Attributes"; break;
         case SHT_GNU_HASH:
-            retval="GNU-style Hash Table"; break;
+            retval="GNU-style_Hash_Table"; break;
         case SHT_GNU_LIBLIST:
-            retval="Prelink Library List"; break;
+            retval="Prelink_Library_List"; break;
         case SHT_CHECKSUM:
-            retval="Checksum for DSO Content"; break;
+            retval="Checksum_for_DSO_Content"; break;
         case SHT_GNU_verdef:
-            retval="Version Definition Section"; break;
+            retval="Version_Definition_Section"; break;
         case SHT_GNU_verneed:
-            retval="Version Needs Section"; break;
+            retval="Version_Needs_Section"; break;
         case SHT_GNU_versym:
-            retval="Version Symbol Table"; break;
+            retval="Version_Symbol_Table"; break;
         default:
-            retval="Not a clue: "+types; break;
+            retval="Not_a_clue: "+types; break;
     }
-    return retval;
+    return " "+retval;
 }
 std::string readelf32::show_prg_flags(unsigned int prg_section)
 {
@@ -257,29 +257,29 @@ std::string readelf32::show_prg_type(unsigned int prg_section)
     unsigned int types=prg_headers[prg_section]->p_type;
     switch (types) {
         case PT_NULL:
-            retval="Program Header Table Entry"; break;
+            retval="Program_Header_Table_Entry"; break;
         case PT_LOAD:
-            retval="Loadable Program Segment"; break;
+            retval="Loadable_Program_Segment"; break;
         case PT_DYNAMIC:
-            retval="Dynamic Linking Information"; break;
+            retval="Dynamic_Linking_Information"; break;
         case PT_INTERP:
-            retval="Program Interpreter"; break;
+            retval="Program_Interpreter"; break;
         case PT_NOTE:
-            retval="Auxiliary Information"; break;
+            retval="Auxiliary_Information"; break;
         case PT_SHLIB:
-            retval="Reserved (SHLIB)"; break;
+            retval="Reserved_(SHLIB)"; break;
         case PT_PHDR:
-            retval="Entry for header table itself"; break;
+            retval="Entry_for_header_table_itself"; break;
         case PT_TLS:
-            retval="Thread-local storage segment"; break;
+            retval="Thread-local_storage_segment"; break;
         case PT_GNU_EH_FRAME:
-            retval="GCC .eh_frame_hdr segment"; break;
+            retval="GCC_.eh_frame_hdr_segment"; break;
         case PT_GNU_STACK:
-            retval="Stack executable"; break;
+            retval="Stack_executable"; break;
         case PT_GNU_RELRO:
-            retval="Read-Only after relocation"; break;
+            retval="Read-Only_after_relocation"; break;
         default:
-            retval="Not a clue: "+types; break;
+            retval="Not_a_clue:_"+types; break;
     }
-    return retval;
+    return " "+retval;
 }
