@@ -24,7 +24,8 @@ class readelf32
     readelf32(std::string fname);
     ~readelf32();
     //
-    const unsigned char* sec_name(unsigned int section_num);
+    const char* sec_name(unsigned int section_num);
+    unsigned int find_section_name(std::string name);
     std::string show_sec_flags(unsigned int section_num);
     std::string show_sec_type(unsigned int section_num);
     std::string show_prg_flags(unsigned int prg_section);
@@ -32,11 +33,12 @@ class readelf32
     //
  public: /* variables */
     // points to array holding file data
-    unsigned char* fdata;
+    char* fdata;
     // pointers into the fdata array
     std::vector<Elf32_Phdr*> prg_headers;
     std::vector<Elf32_Shdr*> sec_headers;
-    std::vector<const unsigned char*> sec_names;
+    std::vector<const char*> sec_names;
+    std::vector<Elf32_Sym*> symbols;
     //
  private:
     std::string filename;

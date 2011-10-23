@@ -1,6 +1,7 @@
 /* emma - readelf32.cpp */
 
 #include "readelf32.h"
+#include "utils.h"
 
 readelf32::readelf32(std::string fname)
 {
@@ -65,7 +66,7 @@ readelf32::readelf32(std::string fname)
         // get size in bytes
         fsize=statbuf.st_size;
         // reserve space
-        fdata=new unsigned char[fsize];
+        fdata=new char[fsize];
         // rewind to start of file again
         if (fseek(ifile,0,SEEK_SET)) {
             throw std::string("Can't rewind file");
@@ -119,7 +120,48 @@ readelf32::readelf32(std::string fname)
         // exit program (one of few exit points)
         exit(1);
     }
-
+    //
+    // show program sections
+    std::cout << "\n";
+    std::cout << "Program Sections (" << prg_headers.size() << ")\n";
+    std::cout << "=================\n";
+    for (unsigned int i=0; i<prg_headers.size(); i++) {
+        std::cout << i << ": " << "\n";
+        std::cout << "  Type: " << hexval0x(prg_headers[i]->p_type) << show_prg_type(i) << "\n";
+        std::cout << "Offset: " << hexval0x(prg_headers[i]->p_offset,8);
+        int count=0;
+        for (unsigned int j=1; j<sec_headers.size(); j++) {
+            if (sec_headers[j]->sh_offset>=prg_headers[i]->p_offset) {
+                if (sec_headers[j]->sh_offset<(prg_headers[i]->p_offset+prg_headers[i]->p_memsz)) {
+                    if (count==0) std::cout << "\n\t\t";
+                    std::cout << " (" << sec_name(j) << "=" << hexval0x(sec_headers[j]->sh_offset) << ")";
+                    count=(count+1)%4;
+                }
+            }
+        }
+        std::cout <<"\n";
+        std::cout << " Vaddr: " << hexval0x(prg_headers[i]->p_vaddr,8) << "\n";
+        std::cout << " Paddr: " << hexval0x(prg_headers[i]->p_paddr,8) << "\n";
+        std::cout << "Pfsize: " << hexval0x(prg_headers[i]->p_filesz)  << "\n";
+        std::cout << "Pmemsz: " << hexval0x(prg_headers[i]->p_memsz)   << "\n";
+        std::cout << " Flags: " << hexval0x(prg_headers[i]->p_flags)   << show_prg_flags(i) << "\n";
+        std::cout << " Align: " << hexval0x(prg_headers[i]->p_align)   << "\n";
+        std::cout << "\n";
+    }
+    //
+    // show sections
+    std::cout << "\n";
+    std::cout << "Sections (" << sec_headers.size() << ")\n";
+    std::cout << "=================\n";
+    for (unsigned int i=0; i<sec_headers.size(); i++) {
+        std::cout << i << ": " << sec_name(i) << "\n";
+        std::cout << "Offset: " << hexval0x(sec_headers[i]->sh_offset,8) << "\n";
+        std::cout << "   VMA: " << hexval0x(sec_headers[i]->sh_addr,8) << "\n";
+        std::cout << "  Size: " << hexval0x(sec_headers[i]->sh_size) << "\n";
+        std::cout << "  Type: " << hexval0x(sec_headers[i]->sh_type) << show_sec_type(i) << "\n";
+        std::cout << " Flags: " << hexval0x(sec_headers[i]->sh_flags) << show_sec_flags(i) << "\n";
+        std::cout << "\n";
+    }
 }
 
 readelf32::~readelf32()
@@ -131,14 +173,30 @@ readelf32::~readelf32()
     // the class is destroyed.
 }
 
-const unsigned char* readelf32::sec_name(unsigned int section_num)
+const char* readelf32::sec_name(unsigned int section_num)
 {
     // return const char* based on sh_name offset into
     // str_table_index section
-    const unsigned char* ptr=fdata;
-    ptr+=sec_headers[sec_name_table]->sh_offset;
-    ptr+=sec_headers[section_num]->sh_name;
+    const char* ptr=fdata;
+    if (section_num>sec_headers.size()) {
+        ptr=NULL;
+    } else {
+        ptr+=sec_headers[sec_name_table]->sh_offset;
+        ptr+=sec_headers[section_num]->sh_name;
+    }
     return ptr;
+}
+
+unsigned int readelf32::find_section_name(std::string name)
+{
+    // return section number of section with 'name'
+    for (unsigned int i=1; i<sec_headers.size(); i++) {
+        if (std::string(sec_name(i))==name) {
+            return i;
+        }
+    }
+    // not found, return empty section (0)
+    return 0;
 }
 
 std::string readelf32::show_sec_flags(unsigned int section_num)

@@ -25,44 +25,63 @@ int main(int argc,const char* argv[])
     options opts(argc,&argv[0]);
 
     // load in file data
-    readelf32 elf32(opts.filename);
+    readelf32 f(opts.filename);
 
-    cout << "\n";
-    cout << "Program Sections (" << elf32.prg_headers.size() << ")\n";
-    cout << "=================\n";
-    for (unsigned int i=0; i<elf32.prg_headers.size(); i++) {
-        cout << i << ": " << "\n";
-        cout << "  Type: " << hexval0x(elf32.prg_headers[i]->p_type) << elf32.show_prg_type(i) << "\n";
-        cout << "Offset: " << hexval0x(elf32.prg_headers[i]->p_offset,8);
-        int count=0;
-        for (unsigned int j=1; j<elf32.sec_headers.size(); j++) {
-            if (elf32.sec_headers[j]->sh_offset>=elf32.prg_headers[i]->p_offset) {
-                if (elf32.sec_headers[j]->sh_offset<(elf32.prg_headers[i]->p_offset+elf32.prg_headers[i]->p_memsz)) {
-                    if (count==0) cout << "\n\t\t";
-                    cout << " (" << elf32.sec_name(j) << "=" << hexval0x(elf32.sec_headers[j]->sh_offset) << ")";
-                    count=(count+1)%4;
-                }
-            }
-        }
-        cout <<"\n";
-        cout << " Vaddr: " << hexval0x(elf32.prg_headers[i]->p_vaddr,8) << "\n";
-        cout << " Paddr: " << hexval0x(elf32.prg_headers[i]->p_paddr,8) << "\n";
-        cout << "Pfsize: " << hexval0x(elf32.prg_headers[i]->p_filesz)  << "\n";
-        cout << "Pmemsz: " << hexval0x(elf32.prg_headers[i]->p_memsz)   << "\n";
-        cout << " Flags: " << hexval0x(elf32.prg_headers[i]->p_flags)   << elf32.show_prg_flags(i) << "\n";
-        cout << " Align: " << hexval0x(elf32.prg_headers[i]->p_align)   << "\n";
-        cout << "\n";
+    // extract symbols
+    // read symbols from .symtab/.strtab
+    unsigned int symtab=f.find_section_name(".symtab");
+    unsigned int strtab=f.find_section_name(".strtab");
+    if ((symtab==0)||(strtab==0)) {
+        throw("That's weird, symbol table not found");
     }
-    cout << "\n";
-    cout << "Sections (" << elf32.sec_headers.size() << ")\n";
-    cout << "=================\n";
-    for (unsigned int i=0; i<elf32.sec_headers.size(); i++) {
-        cout << i << ": " << elf32.sec_name(i) << "\n";
-        cout << "Offset: " << hexval0x(elf32.sec_headers[i]->sh_offset,8) << "\n";
-        cout << "   VMA: " << hexval0x(elf32.sec_headers[i]->sh_addr,8) << "\n";
-        cout << "  Size: " << hexval0x(elf32.sec_headers[i]->sh_size) << "\n";
-        cout << "  Type: " << hexval0x(elf32.sec_headers[i]->sh_type) << elf32.show_sec_type(i) << "\n";
-        cout << " Flags: " << hexval0x(elf32.sec_headers[i]->sh_flags) << elf32.show_sec_flags(i) << "\n";
+    cout << "symtab = " << symtab << "\n";
+    cout << "strtab = " << strtab << "\n";
+    // skip record 0, it's a dummy
+    for (unsigned int i=sizeof(Elf32_Sym);
+            i<f.sec_headers[symtab]->sh_size;
+            i+=sizeof(Elf32_Sym)) {
+        Elf32_Sym* sym=reinterpret_cast<Elf32_Sym*>(f.fdata+f.sec_headers[symtab]->sh_offset+i);
+        cout << hexval0x(sym->st_value,8) << "  ";
+        cout << hexval(sym->st_size,8) << "  ";
+        cout << "-";
+        unsigned char stinfo_b=ELF32_ST_BIND(sym->st_info);
+        cout << ((stinfo_b==STB_LOCAL     )?"Loc":"");
+        cout << ((stinfo_b==STB_GLOBAL    )?"Glo":"");
+        cout << ((stinfo_b==STB_WEAK      )?"Wea":"");
+        cout << ((stinfo_b==STB_NUM       )?"Num":"");
+        cout << ((stinfo_b==STB_GNU_UNIQUE)?"Uni":"");
+        cout << "-";
+        unsigned char stother=ELF32_ST_VISIBILITY(sym->st_other);
+        cout << ((stother==STV_DEFAULT  )?"   ":"");
+        cout << ((stother==STV_INTERNAL )?"Int":"");
+        cout << ((stother==STV_HIDDEN   )?"Hid":"");
+        cout << ((stother==STV_PROTECTED)?"Pro":"");
+        cout << "-";
+        unsigned char stinfo_t=ELF32_ST_TYPE(sym->st_info);
+        cout << ((stinfo_t==STT_NOTYPE   )?"   ":"");
+        cout << ((stinfo_t==STT_OBJECT   )?"Obj":"");
+        cout << ((stinfo_t==STT_FUNC     )?"Fun":"");
+        cout << ((stinfo_t==STT_SECTION  )?"Sec":"");
+        cout << ((stinfo_t==STT_FILE     )?"Fil":"");
+        cout << ((stinfo_t==STT_COMMON   )?"Com":"");
+        cout << ((stinfo_t==STT_TLS      )?"TLD":"");
+        cout << ((stinfo_t==STT_NUM      )?"Num":"");
+        cout << ((stinfo_t==STT_GNU_IFUNC)?"Gnu":"");
+        cout << "-";
+        cout << "  ";
+        unsigned int shndx=sym->st_shndx;
+        switch (shndx) {
+            case 0:
+                cout << "*Und*"; break;
+            case SHN_ABS:
+                cout << "*Abs*"; break;
+            case SHN_COMMON:
+                cout << "*Com*"; break;
+            default:
+                cout << f.sec_name(shndx); break;
+        }
+        cout << "\t";
+        cout << f.fdata+f.sec_headers[strtab]->sh_offset+sym->st_name;
         cout << "\n";
     }
 
