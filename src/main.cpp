@@ -18,7 +18,6 @@ using namespace std;
 #include "readelf32.h"
 #include "utils.h"
 
-
 int main(int argc,const char* argv[])
 {
     // parse options, does not return if no filename given
@@ -27,49 +26,29 @@ int main(int argc,const char* argv[])
     // load in file data
     readelf32 f(opts.filename);
 
-    // extract symbols
-    // read symbols from .symtab/.strtab
-    unsigned int symtab=f.find_section_name(".symtab");
-    unsigned int strtab=f.find_section_name(".strtab");
-    if ((symtab==0)||(strtab==0)) {
-        throw("That's weird, symbol table not found");
-    }
-    cout << "symtab = " << symtab << "\n";
-    cout << "strtab = " << strtab << "\n";
-    // skip record 0, it's a dummy
-    for (unsigned int i=sizeof(Elf32_Sym);
-            i<f.sec_headers[symtab]->sh_size;
-            i+=sizeof(Elf32_Sym)) {
-        Elf32_Sym* sym=reinterpret_cast<Elf32_Sym*>(f.fdata+f.sec_headers[symtab]->sh_offset+i);
-        cout << hexval0x(sym->st_value,8) << "  ";
-        cout << hexval(sym->st_size,8) << "  ";
+    for (unsigned int i=0; i<f.symbols.size(); i++) {
+        cout << hexval0x(f.symbols[i]->val,8) << "  ";
+        if (f.symbols[i]->len>0) {
+            cout << hexval(f.symbols[i]->len,8);
+        } else if (f.symbols[i]->align>0) {
+            cout << hexval(f.symbols[i]->align,8);
+        } else {
+            cout << "        ";
+        }
+        cout << "  ";
         cout << "-";
-        unsigned char stinfo_b=ELF32_ST_BIND(sym->st_info);
-        cout << ((stinfo_b==STB_LOCAL     )?"Loc":"");
-        cout << ((stinfo_b==STB_GLOBAL    )?"Glo":"");
-        cout << ((stinfo_b==STB_WEAK      )?"Wea":"");
-        cout << ((stinfo_b==STB_NUM       )?"Num":"");
-        cout << ((stinfo_b==STB_GNU_UNIQUE)?"Uni":"");
-        cout << "-";
-        unsigned char stother=ELF32_ST_VISIBILITY(sym->st_other);
-        cout << ((stother==STV_DEFAULT  )?"   ":"");
-        cout << ((stother==STV_INTERNAL )?"Int":"");
-        cout << ((stother==STV_HIDDEN   )?"Hid":"");
-        cout << ((stother==STV_PROTECTED)?"Pro":"");
-        cout << "-";
-        unsigned char stinfo_t=ELF32_ST_TYPE(sym->st_info);
-        cout << ((stinfo_t==STT_NOTYPE   )?"   ":"");
-        cout << ((stinfo_t==STT_OBJECT   )?"Obj":"");
-        cout << ((stinfo_t==STT_FUNC     )?"Fun":"");
-        cout << ((stinfo_t==STT_SECTION  )?"Sec":"");
-        cout << ((stinfo_t==STT_FILE     )?"Fil":"");
-        cout << ((stinfo_t==STT_COMMON   )?"Com":"");
-        cout << ((stinfo_t==STT_TLS      )?"TLD":"");
-        cout << ((stinfo_t==STT_NUM      )?"Num":"");
-        cout << ((stinfo_t==STT_GNU_IFUNC)?"Gnu":"");
+        unsigned char stype=f.symbols[i]->type;
+        cout << ((stype==STT_NOTYPE   )?"   ":"");
+        cout << ((stype==STT_OBJECT   )?"Obj":"");
+        cout << ((stype==STT_FUNC     )?"Fun":"");
+        cout << ((stype==STT_SECTION  )?"Sec":"");
+        cout << ((stype==STT_FILE     )?"Fil":"");
+        cout << ((stype==STT_COMMON   )?"Com":"");
+        cout << ((stype==STT_TLS      )?"TLD":"");
+        cout << ((stype==STT_GNU_IFUNC)?"Gnu":"");
         cout << "-";
         cout << "  ";
-        unsigned int shndx=sym->st_shndx;
+        unsigned int shndx=f.symbols[i]->section;
         switch (shndx) {
             case 0:
                 cout << "*Und*"; break;
@@ -80,8 +59,7 @@ int main(int argc,const char* argv[])
             default:
                 cout << f.sec_name(shndx); break;
         }
-        cout << "\t";
-        cout << f.fdata+f.sec_headers[strtab]->sh_offset+sym->st_name;
+        cout << "\t" << f.symbols[i]->name;
         cout << "\n";
     }
 

@@ -11,16 +11,13 @@
 #include <cstdlib>
 #include <sys/types.h>
 #include <sys/stat.h>
-// for memcmp
- #include <cstring>
 // for errno
 #include <cerrno>
-
 #include <elf.h>
 
 class readelf32
 {
- public: /* functions */
+ public: // functions
     readelf32(std::string fname);
     ~readelf32();
     //
@@ -31,16 +28,37 @@ class readelf32
     std::string show_prg_flags(unsigned int prg_section);
     std::string show_prg_type(unsigned int prg_section);
     //
- public: /* variables */
+ public: // variables
+    struct syms_s {
+        // address it points to
+        unsigned int val;
+        // if specified
+        unsigned int len;
+        // if specified (don't know when used!)
+        unsigned int align;
+        // local/global etc
+        unsigned int scope;
+        // file, function, object, etc
+        unsigned int type;
+        // Und/ABS/COM/.name
+        unsigned int section;
+        std::string mangled;
+        std::string name;
+    };
     // points to array holding file data
     char* fdata;
     // pointers into the fdata array
     std::vector<Elf32_Phdr*> prg_headers;
     std::vector<Elf32_Shdr*> sec_headers;
     std::vector<const char*> sec_names;
-    std::vector<Elf32_Sym*> symbols;
+    std::vector<syms_s*> symbols;
     //
- private:
+ private: // functions
+    unsigned int parse_symbols();
+    unsigned int scan_symbol_table(unsigned int symtab);
+    void show_sections();
+    //
+ private: // variables
     std::string filename;
     // information from the elf_hdr
     unsigned int exec_addr;

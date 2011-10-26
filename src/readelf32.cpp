@@ -1,5 +1,11 @@
 /* emma - readelf32.cpp */
 
+// for memcpy
+#include <cstring>
+// makes demangle NOT redefine basename
+#define HAVE_DECL_BASENAME 1
+#include <demangle.h>
+
 #include "readelf32.h"
 #include "utils.h"
 
@@ -109,6 +115,10 @@ readelf32::readelf32(std::string fname)
             }
         }
 
+        show_sections();
+
+        parse_symbols();
+
     } catch (std::string e) {
         if (errno!=0) {
             // if error was from function call?
@@ -120,54 +130,21 @@ readelf32::readelf32(std::string fname)
         // exit program (one of few exit points)
         exit(1);
     }
-    //
-    // show program sections
-    std::cout << "\n";
-    std::cout << "Program Sections (" << prg_headers.size() << ")\n";
-    std::cout << "=================\n";
-    for (unsigned int i=0; i<prg_headers.size(); i++) {
-        std::cout << i << ": " << "\n";
-        std::cout << "  Type: " << hexval0x(prg_headers[i]->p_type) << show_prg_type(i) << "\n";
-        std::cout << "Offset: " << hexval0x(prg_headers[i]->p_offset,8);
-        int count=0;
-        for (unsigned int j=1; j<sec_headers.size(); j++) {
-            if (sec_headers[j]->sh_offset>=prg_headers[i]->p_offset) {
-                if (sec_headers[j]->sh_offset<(prg_headers[i]->p_offset+prg_headers[i]->p_memsz)) {
-                    if (count==0) std::cout << "\n\t\t";
-                    std::cout << " (" << sec_name(j) << "=" << hexval0x(sec_headers[j]->sh_offset) << ")";
-                    count=(count+1)%4;
-                }
-            }
-        }
-        std::cout <<"\n";
-        std::cout << " Vaddr: " << hexval0x(prg_headers[i]->p_vaddr,8) << "\n";
-        std::cout << " Paddr: " << hexval0x(prg_headers[i]->p_paddr,8) << "\n";
-        std::cout << "Pfsize: " << hexval0x(prg_headers[i]->p_filesz)  << "\n";
-        std::cout << "Pmemsz: " << hexval0x(prg_headers[i]->p_memsz)   << "\n";
-        std::cout << " Flags: " << hexval0x(prg_headers[i]->p_flags)   << show_prg_flags(i) << "\n";
-        std::cout << " Align: " << hexval0x(prg_headers[i]->p_align)   << "\n";
-        std::cout << "\n";
-    }
-    //
-    // show sections
-    std::cout << "\n";
-    std::cout << "Sections (" << sec_headers.size() << ")\n";
-    std::cout << "=================\n";
-    for (unsigned int i=0; i<sec_headers.size(); i++) {
-        std::cout << i << ": " << sec_name(i) << "\n";
-        std::cout << "Offset: " << hexval0x(sec_headers[i]->sh_offset,8) << "\n";
-        std::cout << "   VMA: " << hexval0x(sec_headers[i]->sh_addr,8) << "\n";
-        std::cout << "  Size: " << hexval0x(sec_headers[i]->sh_size) << "\n";
-        std::cout << "  Type: " << hexval0x(sec_headers[i]->sh_type) << show_sec_type(i) << "\n";
-        std::cout << " Flags: " << hexval0x(sec_headers[i]->sh_flags) << show_sec_flags(i) << "\n";
-        std::cout << "\n";
-    }
 }
 
 readelf32::~readelf32()
 {
-    if (fdata) {
-        delete fdata;
+    if (fdata)
+        delete[] fdata;
+    if (!prg_headers.empty())
+        prg_headers.clear();
+    if (!sec_headers.empty())
+        sec_headers.clear();
+    if (!sec_names.empty())
+        sec_names.clear();
+    while (!symbols.empty()) {
+        delete symbols.back();
+        symbols.pop_back();
     }
     // sec_headers and prg_headers are destroyed when
     // the class is destroyed.
@@ -203,19 +180,22 @@ std::string readelf32::show_sec_flags(unsigned int section_num)
 {
     std::string retval;
     unsigned int flags=sec_headers[section_num]->sh_flags;
-    if (flags&SHF_WRITE) retval+=" Write";
-    if (flags&SHF_ALLOC) retval+=" Alloc";
-    if (flags&SHF_EXECINSTR) retval+=" Exec";
-    if (flags&SHF_MASKPROC) retval+=" Rsvd";
-    if (flags&SHF_MERGE) retval+=" Merge";
-    if (flags&SHF_STRINGS) retval+=" Strings";
-    if (flags&SHF_INFO_LINK) retval+=" Info_Link";
-    if (flags&SHF_LINK_ORDER) retval+=" Link_Order";
-    if (flags&SHF_OS_NONCONFORMING) retval+=" OS_Noncon";
-    if (flags&SHF_GROUP) retval+=" Group";
-    if (flags&SHF_TLS) retval+=" Thread_Local_Data";
-    if (flags&SHF_ORDERED) retval+=" Ordered";
-    if (flags&SHF_EXCLUDE) retval+=" Exclude";
+    if (flags&SHF_WRITE) retval+=",Write";
+    if (flags&SHF_ALLOC) retval+=",Alloc";
+    if (flags&SHF_EXECINSTR) retval+=",Exec";
+    if (flags&SHF_MASKPROC) retval+=",Rsvd";
+    if (flags&SHF_MERGE) retval+=",Merge";
+    if (flags&SHF_STRINGS) retval+=",Strings";
+    if (flags&SHF_INFO_LINK) retval+=",Info_Link";
+    if (flags&SHF_LINK_ORDER) retval+=",Link_Order";
+    if (flags&SHF_OS_NONCONFORMING) retval+=",OS_Noncon";
+    if (flags&SHF_GROUP) retval+=",Group";
+    if (flags&SHF_TLS) retval+=",Thread_Local_Data";
+    if (flags&SHF_ORDERED) retval+=",Ordered";
+    if (flags&SHF_EXCLUDE) retval+=",Exclude";
+    if (retval.length()>0) {
+        retval=" ("+retval.substr(1)+")";
+    }
     return retval;
 }
 std::string readelf32::show_sec_type(unsigned int section_num)
@@ -274,15 +254,18 @@ std::string readelf32::show_sec_type(unsigned int section_num)
         default:
             retval="Not_a_clue: "+types; break;
     }
-    return " "+retval;
+    return retval;
 }
 std::string readelf32::show_prg_flags(unsigned int prg_section)
 {
     std::string retval;
     unsigned int flags=prg_headers[prg_section]->p_flags;
-    if (flags&PF_R) retval+=" R";
-    if (flags&PF_W) retval+=" W";
-    if (flags&PF_X) retval+=" X";
+    if (flags&PF_R) retval+="R";
+    if (flags&PF_W) retval+="W";
+    if (flags&PF_X) retval+="X";
+    if (retval.length()>0) {
+        retval=" ("+retval+")";
+    }
     return retval;
 }
 std::string readelf32::show_prg_type(unsigned int prg_section)
@@ -315,5 +298,143 @@ std::string readelf32::show_prg_type(unsigned int prg_section)
         default:
             retval="Not_a_clue:_"+types; break;
     }
-    return " "+retval;
+    return retval;
+}
+
+unsigned int readelf32::scan_symbol_table(unsigned int symtab)
+{
+    // get name of current symbol table
+    std::string tabname=sec_name(symtab);
+    // do I need to also look for UPPERCASE versions?
+    unsigned int place=tabname.find("sym");
+    if (place==std::string::npos) {
+        // 'sym' not found in string
+        throw("Unable to find sym in section name");
+    }
+    tabname=tabname.replace(place,3,"str");
+    unsigned int strtab=find_section_name(tabname);
+    if (strtab==0) {
+        // couldn't find strtab for symtab
+        throw("Unable to find str tab for sym tab");
+    }
+    // get initial count of symbols
+    unsigned int delta=symbols.size();
+    // skip dummy record 0
+    for (unsigned int i=sizeof(Elf32_Sym);
+            i<sec_headers[symtab]->sh_size;
+            i+=sizeof(Elf32_Sym)) {
+        Elf32_Sym* sym=reinterpret_cast<Elf32_Sym*>
+            (fdata+sec_headers[symtab]->sh_offset+i);
+        syms_s* tmpsym=new syms_s;
+        tmpsym->val=sym->st_value;
+        tmpsym->len=0;
+        tmpsym->align=0;
+        tmpsym->scope=ELF32_ST_BIND(sym->st_info);
+        tmpsym->type=ELF32_ST_TYPE(sym->st_info);
+        tmpsym->section=sym->st_shndx;
+
+        // determine WHICH common tag to watch
+        // st_shndx (SHN_COMMON) or st_info (STT_COMMON)
+        tmpsym->len=sym->st_size; // for functions, length
+        tmpsym->align=sym->st_size; // for objects, alignment
+
+        tmpsym->mangled=std::string(fdata+sec_headers[strtab]->sh_offset+sym->st_name);
+        char* tstr=cplus_demangle(tmpsym->mangled.c_str(),DMGL_PARAMS);
+        if (tstr==NULL) {
+            tmpsym->name=tmpsym->mangled;
+        } else {
+            tmpsym->name=std::string(tstr);
+            // release memory allocated by cplus_demangle
+            free(tstr);
+        }
+        symbols.push_back(tmpsym);
+    }
+    delta=symbols.size()-delta;
+    return delta;
+}
+unsigned int readelf32::parse_symbols()
+{
+    std::cout << "Symbols (";
+    unsigned int section=0;
+    unsigned int total=0;
+    while (section<sec_headers.size()) {
+        if ((sec_headers[section]->sh_type==SHT_SYMTAB)||
+                (sec_headers[section]->sh_type==SHT_DYNSYM)) {
+            if (total>0) std::cout << "+";
+            total=scan_symbol_table(section);
+            std::cout << total;
+        }
+        section++;
+    }
+    std::cout << ")\n";
+    std::cout << "=================\n";
+    // remove duplicates
+    // dynsym always subset of symtab (if symtab present)
+    bool changed=true;
+    while (changed) {
+        changed=false;
+        for (std::vector<syms_s*>::iterator i=symbols.begin(); i<symbols.end(); i++) {
+            for (std::vector<syms_s*>::iterator j=symbols.begin(); j<symbols.end(); j++) {
+                if (i==j)
+                    continue;
+                if (((*i)->val    ==(*j)->val)&&
+                        ((*i)->len    ==(*j)->len)&&
+                        ((*i)->scope  ==(*j)->scope)&&
+                        ((*i)->type   ==(*j)->type)&&
+                        ((*i)->section==(*j)->section)&&
+                        ((*i)->name   ==(*j)->name)
+                   ) {
+                    symbols.erase(i);
+                    changed=true;
+                    break;
+                }
+            }
+        }
+    }
+    return symbols.size();
+}
+
+void readelf32::show_sections()
+{
+    //
+    // show program sections
+    std::cout << "Program Sections (" << prg_headers.size() << ")\n";
+    std::cout << "=================\n";
+    for (unsigned int i=0; i<prg_headers.size(); i++) {
+        std::cout.width(3);
+        std::cout << i << ": ";
+        std::cout << hexval0x(prg_headers[i]->p_type) << " " << show_prg_type(i);
+        std::cout << show_prg_flags(i) << "\n";
+        std::cout << "Off: " << hexval0x(prg_headers[i]->p_offset,8);
+        std::cout << " VMA: " << hexval0x(prg_headers[i]->p_vaddr,8);
+        std::cout << " PMA: " << hexval0x(prg_headers[i]->p_paddr,8);
+        std::cout << " Pfs: " << hexval0x(prg_headers[i]->p_filesz);
+        std::cout << " Pms: " << hexval0x(prg_headers[i]->p_memsz);
+        for (unsigned int j=1; j<sec_headers.size(); j++) {
+            if (sec_headers[j]->sh_offset>=prg_headers[i]->p_offset) {
+                if (sec_headers[j]->sh_offset<(prg_headers[i]->p_offset+prg_headers[i]->p_memsz)) {
+                    std::cout << " (" << sec_name(j) << "=" << hexval0x(sec_headers[j]->sh_offset) << ")";
+                }
+            }
+        }
+        std::cout <<"\n\n";
+    }
+    std::cout << "\n";
+    //
+    // show sections
+    std::cout << "Sections (" << sec_headers.size() << "-1)\n";
+    std::cout << "=================\n";
+    for (unsigned int i=1; i<sec_headers.size(); i++) {
+        std::cout.width(3);
+        std::cout << i << ": ";
+        std::cout.width(22);
+        std::cout << sec_name(i) << " ";
+        std::cout << "Off: " << hexval0x(sec_headers[i]->sh_offset,8) << " ";
+        std::cout << "VMA: " << hexval0x(sec_headers[i]->sh_addr,8) << " ";
+        std::cout << "Sz: " << hexval0x(sec_headers[i]->sh_size,8) << " ";
+        std::cout << "T: " << hexval0x(sec_headers[i]->sh_type,8) << " (" << show_sec_type(i) << ") ";
+        std::cout << show_sec_flags(i);
+        std::cout << "\n";
+    }
+    std::cout << "\n";
 }
