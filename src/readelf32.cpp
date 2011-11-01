@@ -354,6 +354,7 @@ unsigned int readelf32::scan_symbol_table(unsigned int symtab)
 }
 unsigned int readelf32::parse_symbols()
 {
+    std::cout << "Entry Point: " << hexval0x(exec_addr,8) << "\n\n";
     std::cout << "Symbols (";
     unsigned int section=0;
     unsigned int total=0;
@@ -391,6 +392,7 @@ unsigned int readelf32::parse_symbols()
             }
         }
     }
+
     return symbols.size();
 }
 
@@ -422,12 +424,18 @@ void readelf32::show_sections()
     std::cout << "\n";
     //
     // show sections
+    unsigned int namelen=1;
+    for (unsigned int i=0; i<sec_headers.size(); i++) {
+        if (std::string(sec_name(i)).length()>namelen)
+            namelen=std::string(sec_name(i)).length();
+    }
     std::cout << "Sections (" << sec_headers.size() << "-1)\n";
     std::cout << "=================\n";
     for (unsigned int i=1; i<sec_headers.size(); i++) {
         std::cout.width(3);
         std::cout << i << ": ";
-        std::cout.width(22);
+        std::cout.width(namelen);
+        std::cout << std::right;
         std::cout << sec_name(i) << " ";
         std::cout << "Off: " << hexval0x(sec_headers[i]->sh_offset,8) << " ";
         std::cout << "VMA: " << hexval0x(sec_headers[i]->sh_addr,8) << " ";

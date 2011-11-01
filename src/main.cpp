@@ -28,12 +28,14 @@ int main(int argc,const char* argv[])
 
     for (unsigned int i=0; i<f.symbols.size(); i++) {
         cout << hexval0x(f.symbols[i]->val,8) << "  ";
+        cout.width(8);
+        cout << right;
         if (f.symbols[i]->len>0) {
             cout << hexval(f.symbols[i]->len,8);
         } else if (f.symbols[i]->align>0) {
             cout << hexval(f.symbols[i]->align,8);
         } else {
-            cout << "        ";
+            cout << "";
         }
         cout << "  ";
         cout << "-";
@@ -48,6 +50,8 @@ int main(int argc,const char* argv[])
         cout << ((stype==STT_GNU_IFUNC)?"Gnu":"");
         cout << "-";
         cout << "  ";
+        cout.width(15);
+        cout << left;
         unsigned int shndx=f.symbols[i]->section;
         switch (shndx) {
             case 0:
@@ -59,7 +63,10 @@ int main(int argc,const char* argv[])
             default:
                 cout << f.sec_name(shndx); break;
         }
-        cout << "\t" << f.symbols[i]->name;
+        cout << " ";
+        if (f.symbols[i]->val==f.exec_addr)
+            cout << "(*) ";
+        cout << f.symbols[i]->name;
         cout << "\n";
     }
 

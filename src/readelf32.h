@@ -6,6 +6,8 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <algorithm>
+#include <iterator>
 // fopen/fread/fclose
 #include <cstdio>
 #include <cstdlib>
@@ -61,7 +63,9 @@ class readelf32
  private: // variables
     std::string filename;
     // information from the elf_hdr
+ public:
     unsigned int exec_addr;
+ private:
     unsigned int proc_flags;
     unsigned int sec_name_table;
     //
