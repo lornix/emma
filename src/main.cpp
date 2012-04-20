@@ -15,60 +15,12 @@ using namespace std;
 #include "emma.h"
 
 #include "options.h"
-#include "readelf32.h"
 #include "utils.h"
 
 int main(int argc,const char* argv[])
 {
     // parse options, does not return if no filename given
     options opts(argc,&argv[0]);
-
-    // load in file data
-    readelf32 f(opts.filename);
-
-    for (unsigned int i=0; i<f.symbols.size(); i++) {
-        cout << hexval0x(f.symbols[i]->val,8) << "  ";
-        cout.width(8);
-        cout << right;
-        if (f.symbols[i]->len>0) {
-            cout << hexval(f.symbols[i]->len,8);
-        } else if (f.symbols[i]->align>0) {
-            cout << hexval(f.symbols[i]->align,8);
-        } else {
-            cout << "";
-        }
-        cout << "  ";
-        cout << "-";
-        unsigned char stype=f.symbols[i]->type;
-        cout << ((stype==STT_NOTYPE   )?"   ":"");
-        cout << ((stype==STT_OBJECT   )?"Obj":"");
-        cout << ((stype==STT_FUNC     )?"Fun":"");
-        cout << ((stype==STT_SECTION  )?"Sec":"");
-        cout << ((stype==STT_FILE     )?"Fil":"");
-        cout << ((stype==STT_COMMON   )?"Com":"");
-        cout << ((stype==STT_TLS      )?"TLD":"");
-        cout << ((stype==STT_GNU_IFUNC)?"Gnu":"");
-        cout << "-";
-        cout << "  ";
-        cout.width(15);
-        cout << left;
-        unsigned int shndx=f.symbols[i]->section;
-        switch (shndx) {
-            case 0:
-                cout << "*Und*"; break;
-            case SHN_ABS:
-                cout << "*Abs*"; break;
-            case SHN_COMMON:
-                cout << "*Com*"; break;
-            default:
-                cout << f.sec_name(shndx); break;
-        }
-        cout << " ";
-        if (f.symbols[i]->val==f.exec_addr)
-            cout << "(*) ";
-        cout << f.symbols[i]->name;
-        cout << "\n";
-    }
 
     return 0;
 }
