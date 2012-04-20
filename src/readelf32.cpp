@@ -306,7 +306,7 @@ unsigned int readelf32::scan_symbol_table(unsigned int symtab)
     // get name of current symbol table
     std::string tabname=sec_name(symtab);
     // do I need to also look for UPPERCASE versions?
-    unsigned int place=tabname.find("sym");
+    unsigned long int place=tabname.find("sym");
     if (place==std::string::npos) {
         // 'sym' not found in string
         throw("Unable to find sym in section name");
