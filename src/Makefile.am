@@ -13,7 +13,7 @@ AM_CFLAGS+=-O0
 bin_PROGRAMS=
 #
 bin_PROGRAMS+=emma
-emma_SOURCES=main.cpp utils.cpp options.cpp
+emma_SOURCES=main.cpp options.cpp
 #
 bin_PROGRAMS+=hello_world_c
 hello_world_c_SOURCES=hello_world_c.c
