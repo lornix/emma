@@ -14,12 +14,8 @@ using namespace std;
 
 #include "emma.h"
 
-#include "options.h"
-
 int main(int argc,const char* argv[])
 {
-    // parse options, does not return if no filename given
-    options opts(argc,&argv[0]);
 
     return 0;
 }
