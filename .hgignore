@@ -10,9 +10,7 @@ config.log
 config.status
 
 Makefile
-Makefile.in
 **/Makefile
-**/Makefile.in
 src/emma
 src/hello_world_c
 stamp-h1
