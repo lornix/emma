@@ -57,6 +57,10 @@ CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 CXXLD = $(CXX)
 CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(emma_SOURCES)
 DIST_SOURCES = $(emma_SOURCES)
 ETAGS = etags
@@ -155,7 +159,7 @@ top_srcdir = @top_srcdir@
 AM_CXXFLAGS = -Wall -Wextra -Wundef -Werror -ggdb3 -O0
 #
 AM_CFLAGS = -Wall -Wextra -Wundef -Werror -ggdb3 -O0
-emma_SOURCES = main.cpp
+emma_SOURCES = main.cpp emma.h
 all: all-am
 
 .SUFFIXES:
