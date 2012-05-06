@@ -32,7 +32,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = emma$(EXEEXT) hello_world_c$(EXEEXT)
+bin_PROGRAMS = emma$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -48,26 +48,17 @@ PROGRAMS = $(bin_PROGRAMS)
 am_emma_OBJECTS = main.$(OBJEXT)
 emma_OBJECTS = $(am_emma_OBJECTS)
 emma_LDADD = $(LDADD)
-am_hello_world_c_OBJECTS = hello_world_c-hello_world_c.$(OBJEXT)
-hello_world_c_OBJECTS = $(am_hello_world_c_OBJECTS)
-hello_world_c_LDADD = $(LDADD)
-hello_world_c_LINK = $(CCLD) $(hello_world_c_CFLAGS) $(CFLAGS) \
-	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 am__mv = mv -f
-COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-CCLD = $(CC)
-LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 CXXLD = $(CXX)
 CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
-SOURCES = $(emma_SOURCES) $(hello_world_c_SOURCES)
-DIST_SOURCES = $(emma_SOURCES) $(hello_world_c_SOURCES)
+SOURCES = $(emma_SOURCES)
+DIST_SOURCES = $(emma_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -165,12 +156,10 @@ AM_CXXFLAGS = -Wall -Wextra -Wundef -Werror -ggdb3 -O0
 #
 AM_CFLAGS = -Wall -Wextra -Wundef -Werror -ggdb3 -O0
 emma_SOURCES = main.cpp
-hello_world_c_SOURCES = hello_world_c.c
-hello_world_c_CFLAGS = -Wall -Wextra -Wundef -Werror -O0
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .c .cpp .o .obj
+.SUFFIXES: .cpp .o .obj
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -241,9 +230,6 @@ clean-binPROGRAMS:
 emma$(EXEEXT): $(emma_OBJECTS) $(emma_DEPENDENCIES) $(EXTRA_emma_DEPENDENCIES) 
 	@rm -f emma$(EXEEXT)
 	$(CXXLINK) $(emma_OBJECTS) $(emma_LDADD) $(LIBS)
-hello_world_c$(EXEEXT): $(hello_world_c_OBJECTS) $(hello_world_c_DEPENDENCIES) $(EXTRA_hello_world_c_DEPENDENCIES) 
-	@rm -f hello_world_c$(EXEEXT)
-	$(hello_world_c_LINK) $(hello_world_c_OBJECTS) $(hello_world_c_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -251,36 +237,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hello_world_c-hello_world_c.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
-
-.c.o:
-@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(COMPILE) -c $<
-
-.c.obj:
-@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-hello_world_c-hello_world_c.o: hello_world_c.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(hello_world_c_CFLAGS) $(CFLAGS) -MT hello_world_c-hello_world_c.o -MD -MP -MF $(DEPDIR)/hello_world_c-hello_world_c.Tpo -c -o hello_world_c-hello_world_c.o `test -f 'hello_world_c.c' || echo '$(srcdir)/'`hello_world_c.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/hello_world_c-hello_world_c.Tpo $(DEPDIR)/hello_world_c-hello_world_c.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='hello_world_c.c' object='hello_world_c-hello_world_c.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(hello_world_c_CFLAGS) $(CFLAGS) -c -o hello_world_c-hello_world_c.o `test -f 'hello_world_c.c' || echo '$(srcdir)/'`hello_world_c.c
-
-hello_world_c-hello_world_c.obj: hello_world_c.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(hello_world_c_CFLAGS) $(CFLAGS) -MT hello_world_c-hello_world_c.obj -MD -MP -MF $(DEPDIR)/hello_world_c-hello_world_c.Tpo -c -o hello_world_c-hello_world_c.obj `if test -f 'hello_world_c.c'; then $(CYGPATH_W) 'hello_world_c.c'; else $(CYGPATH_W) '$(srcdir)/hello_world_c.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/hello_world_c-hello_world_c.Tpo $(DEPDIR)/hello_world_c-hello_world_c.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='hello_world_c.c' object='hello_world_c-hello_world_c.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(hello_world_c_CFLAGS) $(CFLAGS) -c -o hello_world_c-hello_world_c.obj `if test -f 'hello_world_c.c'; then $(CYGPATH_W) 'hello_world_c.c'; else $(CYGPATH_W) '$(srcdir)/hello_world_c.c'; fi`
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -499,6 +456,13 @@ uninstall-am: uninstall-binPROGRAMS
 	mostlyclean-generic pdf pdf-am ps ps-am tags uninstall \
 	uninstall-am uninstall-binPROGRAMS
 
+#
+# so I remember how to do this later
+# bin_PROGRAMS+=hello_world_c
+# hello_world_c_SOURCES=hello_world_c.c
+# hello_world_c_CFLAGS=-Wall -Wextra -Wundef
+# hello_world_c_CFLAGS+=-Werror
+# hello_world_c_CFLAGS+=-O0
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

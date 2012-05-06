@@ -15,8 +15,9 @@ bin_PROGRAMS=
 bin_PROGRAMS+=emma
 emma_SOURCES=main.cpp
 #
-bin_PROGRAMS+=hello_world_c
-hello_world_c_SOURCES=hello_world_c.c
-hello_world_c_CFLAGS=-Wall -Wextra -Wundef
-hello_world_c_CFLAGS+=-Werror
-hello_world_c_CFLAGS+=-O0
+# so I remember how to do this later
+# bin_PROGRAMS+=hello_world_c
+# hello_world_c_SOURCES=hello_world_c.c
+# hello_world_c_CFLAGS=-Wall -Wextra -Wundef
+# hello_world_c_CFLAGS+=-Werror
+# hello_world_c_CFLAGS+=-O0
