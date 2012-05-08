@@ -24,11 +24,53 @@ parsefile::parsefile(std::string fname)
         abfd=NULL;
         throw NotValidFile(std::string("Unknown file type: ")+fname);
     }
+    load_sections(abfd);
 }
+
 parsefile::~parsefile()
 {
     if (abfd) {
+        if (!sections.empty()) {
+            /* empty the section vector */
+            std::vector<section_t>::iterator ptr=sections.begin();
+            while (ptr!=sections.end()) {
+                /* sigh, bfd used malloc to create chunk for contents */
+                if (ptr->contents) {
+                    free(ptr->contents);
+                }
+                ptr++;
+            }
+            sections.clear();
+        }
+        if (!symbols.empty()) {
+            symbols.clear();
+        }
         bfd_close(abfd);
         abfd=NULL;
     }
+}
+void parsefile::load_sections(bfd* abfd)
+{
+    /* I couldn't determine a clean method to use bfd_map_over... */
+    /* load the sections, follow the linked list built by bfd */
+    bfd_section* sec=abfd->sections;
+    while (sec) {
+        section_t savesection;
+
+        savesection.name=std::string(sec->name);
+        savesection.vma=sec->vma;
+        savesection.length=sec->size;
+        savesection.alignment=sec->alignment_power;
+        /* TODO determine flags used */
+        savesection.flags=sec->flags;
+        savesection.contents=NULL;
+
+        unsigned long int datasize=bfd_get_section_size(sec);
+        if (datasize) {
+            bfd_malloc_and_get_section(abfd,sec,&(savesection.contents));
+        }
+        sections.push_back(savesection);
+        sec=sec->next;
+    }
+    std::cout << "Loaded " << sections.size() << " sections.\n";
 }

@@ -15,11 +15,8 @@ using namespace std;
 #include "emma.h"
 #include "parsefile.h"
 
-int main(int argc,const char* argv[])
+int main(int argc __attribute__((unused)),const char* argv[])
 {
-    for (int i=0; i<argc; i++) {
-        cout << i << "\t" << argv[i] << "\n";
-    }
     parsefile(std::string(argv[1]));
 
     return 0;

@@ -13,6 +13,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <vector>
+#include <cstdlib>
 
 #include <bfd.h>
 
@@ -30,6 +31,8 @@ struct s_section {
     // something to store RELA relocations
     // line number info?
 };
+typedef struct s_section section_t;
+
 struct s_symbol {
     std::string name;
     unsigned long int value;
@@ -37,16 +40,19 @@ struct s_symbol {
     unsigned int sectionid;
     unsigned long int flags;
 };
+typedef struct s_symbol symbol_t;
 
 class parsefile
 {
 public:
     parsefile(std::string fname);
     ~parsefile();
-private:
+private: /* variables */
     bfd* abfd;
-    std::vector <struct s_section> sections;
-    std::vector <struct s_symbol> symbols;
+    std::vector <section_t> sections;
+    std::vector <symbol_t> symbols;
+private: /* functions */
+    void load_sections(bfd* abfd);
 
     /* exceptions used by parsefile */
 public:
