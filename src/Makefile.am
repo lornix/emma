@@ -13,7 +13,7 @@ AM_CFLAGS+=-O0
 bin_PROGRAMS=
 #
 bin_PROGRAMS+=emma
-emma_SOURCES=main.cpp emma.h parsefile.h parsefile.cpp
+emma_SOURCES=main.cpp emma.h parsefile.h parsefile.cpp utils.h utils.cpp
 #
 # so I remember how to do this later
 # bin_PROGRAMS+=hello_world_c

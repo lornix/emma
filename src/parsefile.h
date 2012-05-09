@@ -11,6 +11,7 @@
 #define PARSEFILE_H
 
 #include <iostream>
+#include <iomanip>
 #include <stdexcept>
 #include <vector>
 #include <cstdlib>
@@ -20,27 +21,36 @@
 #include "../config.h"
 #include "emma.h"
 
-struct s_section {
+typedef struct s_section {
     std::string name;
     unsigned char* contents;
-    unsigned long int vma;
+    vma_t vma_start;
+    vma_t vma_end;
     unsigned long int length;
     unsigned int alignment; /* chaotic evil? */
     unsigned long int flags;
     // something to store REL relocations
     // something to store RELA relocations
     // line number info?
-};
-typedef struct s_section section_t;
+} section_t;
 
-struct s_symbol {
+typedef struct s_symbol {
     std::string name;
     unsigned long int value;
     unsigned long int length;
-    unsigned int sectionid;
     unsigned long int flags;
-};
-typedef struct s_symbol symbol_t;
+    unsigned long int type;
+    unsigned int sectionid;
+} symbol_t;
+
+// linenumber storage (eventually)
+typedef struct s_linenum {
+    unsigned int line_number;
+    union {
+        symbol_t* sym;
+        vma_t offset;
+    } u;
+} linenum_t;
 
 class parsefile
 {
@@ -48,11 +58,13 @@ public:
     parsefile(std::string fname);
     ~parsefile();
 private: /* variables */
-    bfd* abfd;
+    unsigned long int startaddress;
     std::vector <section_t> sections;
     std::vector <symbol_t> symbols;
 private: /* functions */
     void load_sections(bfd* abfd);
+    void load_symbols(bfd* abfd);
+    std::string demangle(bfd* abfd,const char* name);
 
     /* exceptions used by parsefile */
 public:
@@ -65,6 +77,16 @@ public:
     {
      public:
         NotValidFile(std::string const& msg) : runtime_error(msg) { };
+    };
+    class OutOfMemory : public std::runtime_error
+    {
+     public:
+        OutOfMemory(std::string const& msg) : runtime_error(msg) { };
+    };
+    class GeneralError : public std::runtime_error
+    {
+     public:
+        GeneralError(std::string const& msg) : runtime_error(msg) { };
     };
 };
 
