@@ -28,7 +28,12 @@ parsefile::parsefile(std::string fname)
 
     filename=fname;
 
-    bfd_architecture arch=bfd_get_arch(abfd);
+    arch=bfd_get_arch(abfd);
+    mach=bfd_get_mach(abfd);
+    archmach=std::string(bfd_printable_arch_mach(arch,mach));
+    std::cout << "Arch: " << arch << "\n";
+    std::cout << "Mach: " << mach << "\n";
+    std::cout << "String: " << archmach << "\n";
     switch (arch) {
         case bfd_arch_i386:
             startaddress=abfd->start_address;

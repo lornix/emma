@@ -60,6 +60,9 @@ public:
     ~parsefile();
 private: /* variables */
     std::string filename;
+    bfd_architecture arch;
+    unsigned long mach;
+    std::string archmach;
     unsigned long int startaddress;
     std::vector <section_t> sections;
     std::vector <symbol_t> symbols;
