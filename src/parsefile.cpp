@@ -17,40 +17,56 @@ parsefile::parsefile(std::string fname)
     bfd_set_default_target("default");
     abfd=bfd_openr(fname.c_str(),NULL);
     if (!abfd) {
-        throw CantOpenFile(std::string("Unable to open file: ")+fname);
+        throw CantOpenFile("Unable to open file: "+fname);
     }
     /* make sure file is a known object type, maybe add code
        to parse bfd_archive and bfd_core, along with raw data */
     if (!bfd_check_format(abfd,bfd_object)) {
         bfd_close(abfd);
-        abfd=NULL;
-        throw NotValidFile(std::string("Unknown file type: ")+fname);
+        throw NotValidFile("Unknown file type: "+fname);
     }
-    startaddress=abfd->start_address;
-    std::cout << "Start Address: 0x" << std::hex << startaddress << std::dec << "\n";
 
-    load_sections(abfd);
-    load_symbols(abfd);
+    filename=fname;
+
+    bfd_architecture arch=bfd_get_arch(abfd);
+    switch (arch) {
+        case bfd_arch_i386:
+            startaddress=abfd->start_address;
+            // bool flag_has_reloc;
+            // bool flag_has_linenums;
+            // bool flag_has_debug;
+            // bool flag_has_symbols;
+            // bool flag_has_locals;
+            // bool flag_has_dynamic;
+            // bool flag_is_relaxable;
+
+            elf_load_sections(abfd);
+            elf_load_symbols(abfd);
+            break;
+        default:
+            bfd_close(abfd);
+            throw NotValidFile("Unknown/Unhandled Architecture");
+    }
 
     /* all done, close file */
     bfd_close(abfd);
 
-    std::cout << "\n";
-    std::vector<section_t>::iterator ptr1=sections.begin();
-    while (ptr1!=sections.end()) {
-        tohex(ptr1->vma_start,8,"");
-        std::cout << " ";
-        tohex(ptr1->length,8,"");
-        std::cout << " " << ptr1->name << "\n";
-        ptr1++;
-    }
-    std::cout << "\n";
-    std::vector<symbol_t>::iterator ptr2=symbols.begin();
-    while (ptr2!=symbols.end()) {
-        tohex(ptr2->value,8,"");
-        std::cout << " " << (char)ptr2->type << " " << ptr2->name << "\n";
-        ptr2++;
-    }
+    std::cout << "File: " << filename << "\n";
+    std::cout << "Start Address: " << tohex(startaddress,0) << "\n";
+    std::cout << "Loaded " << sections.size() << " sections.\n";
+    std::cout << "Loaded " << symbols.size() << " symbols.\n";
+
+    // std::vector<section_t>::iterator ptr1=sections.begin();
+    // while (ptr1!=sections.end()) {
+    //     std::cout << tohex(ptr1->vma_start,8,"") << " " << tohex(ptr1->length,8,"") << " " << ptr1->name << "\n";
+    //     ptr1++;
+    // }
+    // std::cout << "\n";
+    // std::vector<symbol_t>::iterator ptr2=symbols.begin();
+    // while (ptr2!=symbols.end()) {
+    //     std::cout << tohex(ptr2->value,8,"") << " " << (char)ptr2->type << " " << ptr2->name << "\n";
+    //     ptr2++;
+    // }
 }
 
 parsefile::~parsefile()
@@ -72,7 +88,7 @@ parsefile::~parsefile()
         symbols.clear();
     }
 }
-void parsefile::load_sections(bfd* abfd)
+void parsefile::elf_load_sections(bfd* abfd)
 {
     /* I couldn't determine a clean method to use bfd_map_over... */
     /* load the sections, follow the linked list built by bfd */
@@ -97,9 +113,8 @@ void parsefile::load_sections(bfd* abfd)
         sections.push_back(savesection);
         sec=sec->next;
     }
-    std::cout << "Loaded " << sections.size() << " sections.\n";
 }
-void parsefile::load_symbols(bfd* abfd)
+void parsefile::elf_load_symbols(bfd* abfd)
 {
     /* ask how big storage for symbols needs to be */
     long int datasize=bfd_get_symtab_upper_bound(abfd);
@@ -111,12 +126,12 @@ void parsefile::load_symbols(bfd* abfd)
 
         if (!symtable) {
             /* couldn't allocate memory? very odd */
-            throw OutOfMemory(std::string("Error allocating memory for symtable"));
+            throw OutOfMemory("Error allocating memory for symtable");
         }
 
         long numsymbols=bfd_canonicalize_symtab(abfd,symtable);
         if (numsymbols<0) {
-            throw GeneralError(std::string("Error while canonicalizing symbols"));
+            throw GeneralError("Error while canonicalizing symbols");
         }
 
         /* process regular symbols */
@@ -142,10 +157,13 @@ void parsefile::load_symbols(bfd* abfd)
 
         if (!dynsymtable) {
             /* couldn't allocate memory? very odd */
-            throw OutOfMemory(std::string("Error allocating memory for dynamic symtable"));
+            throw OutOfMemory("Error allocating memory for dynamic symtable");
         }
 
         long dynnumsymbols=bfd_canonicalize_dynamic_symtab(abfd,dynsymtable);
+        if (dynnumsymbols<0) {
+            throw GeneralError("Error while canonicalizing dynamic symbols");
+        }
         /* process dynamic symbols */
         for (long i=0; i<dynnumsymbols; i++) {
             symbol_t dynsym;
@@ -159,8 +177,6 @@ void parsefile::load_symbols(bfd* abfd)
         }
         free(dynsymtable);
     }
-
-    std::cout << "Loaded " << symbols.size() << " symbols.\n";
 }
 std::string parsefile::demangle(bfd* abfd,const char* name)
 {

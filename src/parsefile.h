@@ -31,6 +31,7 @@ typedef struct s_section {
     unsigned long int flags;
     // something to store REL relocations
     // something to store RELA relocations
+    // look at reloc_cache_entry in bfd.h
     // line number info?
 } section_t;
 
@@ -58,12 +59,21 @@ public:
     parsefile(std::string fname);
     ~parsefile();
 private: /* variables */
+    std::string filename;
     unsigned long int startaddress;
     std::vector <section_t> sections;
     std::vector <symbol_t> symbols;
+    bool flag_has_reloc;
+    bool flag_has_linenums;
+    bool flag_has_debug;
+    bool flag_has_symbols;
+    bool flag_has_locals;
+    bool flag_has_dynamic;
+    bool flag_is_relaxable;
+
 private: /* functions */
-    void load_sections(bfd* abfd);
-    void load_symbols(bfd* abfd);
+    void elf_load_sections(bfd* abfd);
+    void elf_load_symbols(bfd* abfd);
     std::string demangle(bfd* abfd,const char* name);
 
     /* exceptions used by parsefile */

@@ -17,7 +17,18 @@ using namespace std;
 
 int main(int argc __attribute__((unused)),const char* argv[])
 {
-    parsefile(std::string(argv[1]));
+    for (int i=1; i<argc; i++) {
+        try {
+            parsefile(std::string(argv[i]));
+            std::cout << "\n";
+        }
+        catch (parsefile::NotValidFile e) {
+            std::cerr << e.what() << "\n";
+        }
+        catch (parsefile::CantOpenFile e) {
+            std::cerr << e.what() << "\n";
+        };
+    }
 
     return 0;
 }

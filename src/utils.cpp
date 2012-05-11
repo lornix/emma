@@ -6,7 +6,9 @@
 
 #include "utils.h"
 
-void tohex(unsigned long int value,int length,std::string prefix)
+#include <sstream>
+
+std::string tohex(unsigned long int value,int length,std::string prefix)
 {
     if (length==0) {
         if (value>0xffffffffl) {
@@ -19,8 +21,10 @@ void tohex(unsigned long int value,int length,std::string prefix)
             length=2;
         }
     }
+    std::ostringstream ss;
     if (prefix.length()>0) {
-        std::cout << prefix;
+        ss << prefix;
     }
-    std::cout << std::setfill('0') << std::setw(length) << std::hex << value << std::dec;
+    ss << std::setfill('0') << std::setw(length) << std::hex << value << std::dec;
+    return ss.str();
 }
