@@ -30,10 +30,7 @@ parsefile::parsefile(std::string fname)
 
     arch=bfd_get_arch(abfd);
     mach=bfd_get_mach(abfd);
-    archmach=std::string(bfd_printable_arch_mach(arch,mach));
-    std::cout << "Arch: " << arch << "\n";
-    std::cout << "Mach: " << mach << "\n";
-    std::cout << "String: " << archmach << "\n";
+    machstr=std::string(bfd_printable_arch_mach(arch,mach));
     switch (arch) {
         case bfd_arch_i386:
             startaddress=abfd->start_address;
@@ -50,7 +47,7 @@ parsefile::parsefile(std::string fname)
             break;
         default:
             bfd_close(abfd);
-            throw NotValidFile("Unknown/Unhandled Architecture");
+            throw NotValidFile("Unknown/Unhandled Architecture: "+machstr);
     }
 
     /* all done, close file */
