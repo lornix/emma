@@ -32,7 +32,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = emma$(EXEEXT)
+bin_PROGRAMS = frida$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -45,9 +45,9 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_emma_OBJECTS = main.$(OBJEXT) parsefile.$(OBJEXT) utils.$(OBJEXT)
-emma_OBJECTS = $(am_emma_OBJECTS)
-emma_LDADD = $(LDADD)
+am_frida_OBJECTS = main.$(OBJEXT) parsefile.$(OBJEXT) utils.$(OBJEXT)
+frida_OBJECTS = $(am_frida_OBJECTS)
+frida_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -61,8 +61,8 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(emma_SOURCES)
-DIST_SOURCES = $(emma_SOURCES)
+SOURCES = $(frida_SOURCES)
+DIST_SOURCES = $(frida_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -159,7 +159,7 @@ top_srcdir = @top_srcdir@
 AM_CXXFLAGS = -Wall -Wextra -Wundef -Werror -ggdb3 -O0
 #
 AM_CFLAGS = -Wall -Wextra -Wundef -Werror -ggdb3 -O0
-emma_SOURCES = main.cpp emma.h parsefile.h parsefile.cpp utils.h utils.cpp
+frida_SOURCES = main.cpp frida.h parsefile.h parsefile.cpp utils.h utils.cpp
 all: all-am
 
 .SUFFIXES:
@@ -231,9 +231,9 @@ uninstall-binPROGRAMS:
 
 clean-binPROGRAMS:
 	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
-emma$(EXEEXT): $(emma_OBJECTS) $(emma_DEPENDENCIES) $(EXTRA_emma_DEPENDENCIES) 
-	@rm -f emma$(EXEEXT)
-	$(CXXLINK) $(emma_OBJECTS) $(emma_LDADD) $(LIBS)
+frida$(EXEEXT): $(frida_OBJECTS) $(frida_DEPENDENCIES) $(EXTRA_frida_DEPENDENCIES) 
+	@rm -f frida$(EXEEXT)
+	$(CXXLINK) $(frida_OBJECTS) $(frida_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)

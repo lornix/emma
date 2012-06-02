@@ -19,7 +19,7 @@
 #include <bfd.h>
 
 #include "../config.h"
-#include "emma.h"
+#include "frida.h"
 
 typedef struct s_section {
     std::string name;

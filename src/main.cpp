@@ -1,4 +1,4 @@
-/* emma - main.cpp */
+/* frida - main.cpp */
 
 #include <iostream>
 // for exit
@@ -12,7 +12,7 @@ using namespace std;
 
 #include "../config.h"
 
-#include "emma.h"
+#include "frida.h"
 #include "parsefile.h"
 
 int main(int argc __attribute__((unused)),const char* argv[])

@@ -11,6 +11,6 @@ config.status
 
 Makefile
 **/Makefile
-src/emma
+src/frida
 src/hello_world_c
 stamp-h1

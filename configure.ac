@@ -1,5 +1,5 @@
 #
-# configure script for emma
+# configure script for frida
 #
 AC_PREREQ([2.68])
 #
@@ -12,7 +12,7 @@ define([LORNIX_REV],m4_default_nblank(LORNIX_REV,[UNK]))
 define([LORNIX_VERSION],m4_join([],LORNIX_VER,[-r],LORNIX_REV))
 #
 # now set the name, version and contact details
-AC_INIT([emma], LORNIX_VERSION, [lornix@lornix.com])
+AC_INIT([frida], LORNIX_VERSION, [lornix@lornix.com])
 #
 AM_INIT_AUTOMAKE([-Wall -Werror foreign dist-bzip2 no-dist-gzip])
 #
