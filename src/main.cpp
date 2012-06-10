@@ -8,24 +8,24 @@
 // #include <bfd.h>
 // #include <dis-asm.h>
 
-using namespace std;
-
 #include "../config.h"
 
 #include "frida.h"
 #include "parsefile.h"
 
-int main(int argc __attribute__((unused)),const char* argv[])
+int main(int argc,const char* argv[])
 {
     for (int i=1; i<argc; i++) {
         try {
             parsefile(std::string(argv[i]));
         }
         catch (parsefile::NotValidFile e) {
-            std::cerr << e.what() << "\n";
+            // NIX - commented out to reduce clutter
+            // std::cerr << e.what() << "\n";
         }
         catch (parsefile::CantOpenFile e) {
-            std::cerr << e.what() << "\n";
+            // NIX - commented out to reduce clutter
+            // std::cerr << e.what() << "\n";
         };
     }
 

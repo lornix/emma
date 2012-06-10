@@ -11,6 +11,7 @@
 #define PARSEFILE_H
 
 #include <iostream>
+#include <sstream>
 #include <iomanip>
 #include <stdexcept>
 #include <vector>
@@ -53,6 +54,8 @@ typedef struct s_linenum {
     } u;
 } linenum_t;
 
+// formfeed 
+
 class parsefile
 {
 public:
@@ -63,10 +66,15 @@ private: /* variables */
     bfd_architecture arch;
     unsigned long mach;
     std::string machstr;
+    std::string filetypestr;
+    std::string flavorstr;
+    bfd_flavour flavor;
+    flagword fileflags;
     unsigned long int startaddress;
     std::vector <section_t> sections;
     std::vector <symbol_t> symbols;
     bool flag_has_reloc;
+    bool flag_has_exec;
     bool flag_has_linenums;
     bool flag_has_debug;
     bool flag_has_symbols;

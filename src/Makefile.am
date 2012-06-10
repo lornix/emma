@@ -2,12 +2,12 @@
 ##
 AM_CXXFLAGS=-Wall -Wextra -Wundef
 AM_CXXFLAGS+=-Werror
-AM_CXXFLAGS+=-ggdb3
+AM_CXXFLAGS+=-g
 AM_CXXFLAGS+=-O0
 #
 AM_CFLAGS=-Wall -Wextra -Wundef
 AM_CFLAGS+=-Werror
-AM_CFLAGS+=-ggdb3
+AM_CFLAGS+=-g
 AM_CFLAGS+=-O0
 #
 bin_PROGRAMS=

@@ -23,7 +23,7 @@ parsefile::parsefile(std::string fname)
        to parse bfd_archive and bfd_core, along with raw data */
     if (!bfd_check_format(abfd,bfd_object)) {
         bfd_close(abfd);
-        throw NotValidFile("Unknown file type: "+fname);
+        throw NotValidFile("Unknown/Not Handled File Type: "+fname);
     }
 
     filename=fname;
@@ -31,44 +31,69 @@ parsefile::parsefile(std::string fname)
     arch=bfd_get_arch(abfd);
     mach=bfd_get_mach(abfd);
     machstr=std::string(bfd_printable_arch_mach(arch,mach));
+    fileflags=bfd_get_file_flags(abfd);
     switch (arch) {
         case bfd_arch_i386:
-            startaddress=abfd->start_address;
-            // bool flag_has_reloc;
-            // bool flag_has_linenums;
-            // bool flag_has_debug;
-            // bool flag_has_symbols;
-            // bool flag_has_locals;
-            // bool flag_has_dynamic;
-            // bool flag_is_relaxable;
 
+            flag_has_reloc=fileflags&HAS_RELOC;
+            flag_has_exec=fileflags&EXEC_P;
+            flag_has_linenums=fileflags&HAS_LINENO;
+            flag_has_debug=fileflags&HAS_DEBUG;
+            flag_has_symbols=fileflags&HAS_SYMS;
+            flag_has_locals=fileflags&HAS_LOCALS;
+            flag_has_dynamic=fileflags&DYNAMIC;
+            flag_is_relaxable=fileflags&BFD_IS_RELAXABLE;
+
+            startaddress=abfd->start_address;
             elf_load_sections(abfd);
             elf_load_symbols(abfd);
+
             break;
         default:
             bfd_close(abfd);
             throw NotValidFile("Unknown/Unhandled Architecture: "+machstr);
     }
 
-    /* all done, close file */
-    bfd_close(abfd);
-
+    flavor=bfd_get_flavour(abfd);
+    std::ostringstream tmpstr;
+    switch (flavor) {
+        case bfd_target_elf_flavour:
+            tmpstr << "ELF";
+            break;
+        default:
+            tmpstr << "#" << flavor << " - FIXME";
+    }
+    if (flag_has_exec) {
+        tmpstr << " (exec)";
+    } else {
+        tmpstr << " (lib)";
+    }
+    flavorstr=tmpstr.str();
+    filetypestr=std::string(bfd_get_target(abfd));
     std::cout << "File: " << filename << "\n";
+    std::cout << "Filetype: " << filetypestr << "\n";
+    std::cout << "Flavor: " << flavorstr << "\n";
+    std::cout << "Architecture: " << machstr << "\n";
     std::cout << "Start Address: " << tohex(startaddress,0) << "\n";
     std::cout << "Loaded " << sections.size() << " sections.\n";
     std::cout << "Loaded " << symbols.size() << " symbols.\n";
+    std::cout << "\n";
 
-    // std::vector<section_t>::iterator ptr1=sections.begin();
-    // while (ptr1!=sections.end()) {
-    //     std::cout << tohex(ptr1->vma_start,8,"") << " " << tohex(ptr1->length,8,"") << " " << ptr1->name << "\n";
-    //     ptr1++;
-    // }
-    // std::cout << "\n";
-    // std::vector<symbol_t>::iterator ptr2=symbols.begin();
-    // while (ptr2!=symbols.end()) {
-    //     std::cout << tohex(ptr2->value,8,"") << " " << (char)ptr2->type << " " << ptr2->name << "\n";
-    //     ptr2++;
-    // }
+    std::vector<section_t>::iterator ptr1=sections.begin();
+    while (ptr1!=sections.end()) {
+        std::cout << tohex(ptr1->vma_start,8,"") << " " << tohex(ptr1->length,8,"") << " " << ptr1->name << "\n";
+        ptr1++;
+    }
+    std::cout << "\n";
+    std::vector<symbol_t>::iterator ptr2=symbols.begin();
+    while (ptr2!=symbols.end()) {
+        std::cout << tohex(ptr2->value,8,"") << " " << (char)ptr2->type << " " << ptr2->name << "\n";
+        ptr2++;
+    }
+    std::cout << "\n";
+
+    /* all done, close file */
+    bfd_close(abfd);
 }
 
 parsefile::~parsefile()

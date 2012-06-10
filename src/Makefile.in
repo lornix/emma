@@ -156,9 +156,9 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_CXXFLAGS = -Wall -Wextra -Wundef -Werror -ggdb3 -O0
+AM_CXXFLAGS = -Wall -Wextra -Wundef -Werror -g -O0
 #
-AM_CFLAGS = -Wall -Wextra -Wundef -Werror -ggdb3 -O0
+AM_CFLAGS = -Wall -Wextra -Wundef -Werror -g -O0
 frida_SOURCES = main.cpp frida.h parsefile.h parsefile.cpp utils.h utils.cpp
 all: all-am
 
