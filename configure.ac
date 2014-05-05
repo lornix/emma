@@ -3,11 +3,9 @@
 #
 AC_PREREQ([2.68])
 #
-# determine current version number, from hg rev #
-# if 'hg' exists, determine current tip revision
-#   otherwise, use 'UNK' as revision number
+# determine current version number, from git rev #
 define([LORNIX_VER],m4_esyscmd_s([cat VERSION]))
-define([LORNIX_REV],m4_esyscmd_s([hg tip --template "{rev}"]))
+define([LORNIX_REV],m4_esyscmd_s([git rev-parse --short HEAD]))
 define([LORNIX_REV],m4_default_nblank(LORNIX_REV,[UNK]))
 define([LORNIX_VERSION],m4_join([],LORNIX_VER,[-r],LORNIX_REV))
 #

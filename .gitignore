@@ -1,0 +1,12 @@
+Makefile
+autom4te.cache/
+compile
+config.h
+config.log
+config.status
+src/.deps/
+src/Makefile
+src/emma
+src/*.o
+stamp-h1
+
