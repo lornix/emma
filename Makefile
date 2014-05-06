@@ -3,36 +3,36 @@
 #  Loni Nix <lornix@lornix.com>
 #
 # adhere to a higher standard!
-#CFLAGS+=-std=c99
-#CFLAGS+=-std=c11
+#CXXFLAGS+=-std=c99
+#CXXFLAGS+=-std=c11
 # pretty much always want debugging symbols included
-CFLAGS+=-g3
-#CFLAGS+=-gstabs3
+CXXFLAGS+=-g3
+#CXXFLAGS+=-gstabs3
 # yell out all warnings and whatnot
-CFLAGS+=-Wall -Wextra -Wunused
+CXXFLAGS+=-Wall -Wextra -Wunused
 # make all warnings into errors
-CFLAGS+=-Werror
+CXXFLAGS+=-Werror
 # link time optimization! cool! smaller exec's!
-#CFLAGS+=-flto
+#CXXFLAGS+=-flto
 #LDFLAGS+=-flto
 # optimize!
-#CFLAGS+=-O3
+#CXXFLAGS+=-O3
 # or not!
-CFLAGS+=-O0
+CXXFLAGS+=-O0
 # enable for gmon performance statistics
-#CFLAGS+=-pg
+#CXXFLAGS+=-pg
 # preserve everything used to create binary, verbose assembly comments
-#CFLAGS+=-masm=intel --save-temps -fverbose-asm
+#CXXFLAGS+=-masm=intel --save-temps -fverbose-asm
 #
 # das linker flags
 # LDFLAGS+=
 LDFLAGS+=-lm
-# LDFLAGS+=-lbfd
+LDFLAGS+=-lbfd
 #
-CC:=gcc
+CXX:=g++
 #
 .SUFFIXES:
-.SUFFIXES: .c .cpp .o
+.SUFFIXES: .cpp .h .o
 #
 SHELL=/bin/sh
 #
@@ -43,20 +43,19 @@ all: emma
 OBJS=main.o parsefile.o utils.o
 
 emma: $(OBJS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
 
-main.o: main.c emma.h
+main.o: main.cpp emma.h
 
-parsefile.o: parsefile.c parsefile.h emma.h
+parsefile.o: parsefile.cpp parsefile.h emma.h
 
-utils.o: utils.c utils.h emma.h
+utils.o: utils.cpp utils.h emma.h
 
-%.o : %.c
-	$(CC) $(CFLAGS) $(LDFLAGS) -c -o $@ $<
+%.o : %.cpp
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -c -o $@ $<
 
 % : %.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $<
 
 clean:
 	-rm emma *.o
-

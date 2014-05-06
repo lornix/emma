@@ -19,7 +19,6 @@
 
 #include <bfd.h>
 
-#include "../config.h"
 #include "emma.h"
 
 typedef struct s_section {

@@ -10,7 +10,6 @@
 #include <iostream>
 #include <iomanip>
 
-#include "../config.h"
 #include "emma.h"
 
 std::string tohex(unsigned long int value,int length=0,std::string prefix="0x");

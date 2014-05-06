@@ -8,8 +8,6 @@
 // #include <bfd.h>
 // #include <dis-asm.h>
 
-#include "../config.h"
-
 #include "emma.h"
 #include "parsefile.h"
 
