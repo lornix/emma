@@ -36,6 +36,12 @@ CXX:=g++
 #
 SHELL=/bin/sh
 #
+# build VERREV macro
+VERSION=$(shell cat VERSION)
+REVISION=$(shell git rev-parse --short HEAD)
+#
+CXXFLAGS+=-D'VERREV="$(VERSION)-$(REVISION)"'
+#
 .PHONY: all clean
 
 all: emma
@@ -54,8 +60,5 @@ utils.o: utils.cpp utils.h emma.h
 %.o : %.cpp
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -c -o $@ $<
 
-% : %.o
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $<
-
 clean:
-	-rm emma *.o
+	-rm emma $(OBJS)

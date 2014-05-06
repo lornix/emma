@@ -13,6 +13,7 @@
 
 int main(int argc,const char* argv[])
 {
+    std::cout << "Ver: " << VERREV << "\n";
     for (int i=1; i<argc; i++) {
         try {
             parsefile(std::string(argv[i]));
