@@ -26,7 +26,7 @@ CXXFLAGS+=-O0
 #
 # das linker flags
 # LDFLAGS+=
-LDFLAGS+=-lm
+# LDFLAGS+=-lm
 LDFLAGS+=-lbfd
 #
 CXX:=g++
