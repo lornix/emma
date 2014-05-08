@@ -1,3 +1,11 @@
 emma
 *.o
-
+test/countinstr
+test/environ
+test/locale_commas
+test/pokefunction
+test/rdtsc
+test/rscalc
+test/sqrt
+test/tracer1
+test/tst32
