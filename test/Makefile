@@ -1,37 +1,37 @@
 #
 CFLAGS=-g -O0
 CFLAGS+=-Wall -Wextra -Wunused
+CFLAGS+=--save-temps
 #
 LDFLAGS=-lm
 #
-NFLAGS=-g -felf64
+ASFLAGS=-g
 #
+AS=as
 CC:=gcc
 CXX:=g++
-NASM:=nasm
 #
 .SUFFIXES:
-.SUFFIXES: .c .cpp .asm .s .o
+.SUFFIXES: .c .cpp .s .o
 #
 .phony: all clean
-
-OBJS=countinstr environ locale_commas rscalc sqrt tracer1 pokefunction rdtsc tst32
-
-all: $(OBJS)
-
-% :%.s
-	as -g $< -o $@.o
-	ld $@.o -o $@
+#
+SRC=$(wildcard *.c) $(wildcard *.cpp) $(wildcard *.s)
+EXECS=$(basename $(SRC))
+#
+all: $(EXECS)
 
 %: %.c
-	$(CC) $(CFLAGS) $(LDFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) -c $< -o $@.o
+	$(CC) $(CFLAGS) $(LDFLAGS) $@.o -o $@
 
 %: %.cpp
-	$(CXX) $(CFLAGS) $(LDFLAGS) $< -o $@
+	$(CXX) $(CFLAGS) $(LDFLAGS) -c $< -o $@.o
+	$(CXX) $(CFLAGS) $(LDFLAGS) $@.o -o $@
 
-%: %.asm
-	$(NASM) $(NFLAGS) $< -o $@.o
-	$(LD) -o $@ $@.o -lc || $(CC) -o $@ $@.o -lc
+% :%.s
+	$(AS) $(ASFLAGS) $< -o $@.o
+	$(LD) $@.o -o $@
 
 clean:
-	rm -f *.o $(OBJS)
+	rm -f *.o $(EXECS)
