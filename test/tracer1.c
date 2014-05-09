@@ -38,29 +38,30 @@ int main()
         /* printf("SysCall %3d: ", syscall_nr); */
         switch (syscall_nr)
         {
-            case   3:	SHOW("read"); break;
-            case   5:	SHOW("open"); break;
-            case   4:	SHOW("write"); break;
-            case   6:	SHOW("close"); break;
-            case  11:	SHOW("execve"); break;
-            case  13:	SHOW("time"); break;
-            case  19:	SHOW("seek"); break;
-            case  27:	SHOW("alarm"); break;
-            case  33:	SHOW("access"); break;
-            case  45:	SHOW("brk"); break;
-            case  54:	SHOW("ioctl"); break;
-            case  91:	SHOW("munmap"); break;
-            case 102:	SHOW("socketcall"); break;
-            case 125:	SHOW("mprotect"); break;
-            case 140:	SHOW("_llseek"); break;
-            case 141:	SHOW("getdents"); break;
-            case 174:	SHOW("rt_sigaction"); break;
-            case 192:	SHOW("mmap2"); break;
-            case 195:	SHOW("stat64"); break;
-            case 197:	SHOW("fstat64"); break;
-            case 221:	SHOW("fcntl64"); break;
-            case 243:	SHOW("set_thread_area"); break;
-            case 252:	SHOW("exit_group"); break;
+            case   0:	SHOW("read"); break;
+            case   1:	SHOW("write"); break;
+            case   2:	SHOW("open"); break;
+            case   3:	SHOW("close"); break;
+            case   4:	SHOW("stat"); break;
+            case   5:	SHOW("fstat"); break;
+            case   8:	SHOW("lseek"); break;
+            case   9:	SHOW("mmap"); break;
+            case  10:	SHOW("mprotect"); break;
+            case  11:	SHOW("munmap"); break;
+            case  12:	SHOW("brk"); break;
+            case  13:	SHOW("rt_sigaction"); break;
+            case  16:	SHOW("ioctl"); break;
+            case  21:	SHOW("access"); break;
+            case  37:	SHOW("alarm"); break;
+            case  41:	SHOW("socket"); break;
+            case  42:	SHOW("connect"); break;
+            case  59:	SHOW("execve"); break;
+            case  60:	SHOW("exit"); break;
+            case  63:	SHOW("uname"); break;
+            case  72:	SHOW("fcntl"); break;
+            case  78:	SHOW("getdents"); break;
+            case 158:	SHOW("arch_prctl"); break;
+            case 257:	SHOW("openat"); break;
             default:	printf("SysCall %3d: ?\n",syscall_nr); break;
         }
 

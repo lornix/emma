@@ -1,11 +1,11 @@
 #
 CFLAGS=-g -O0
 CFLAGS+=-Wall -Wextra -Wunused
-CFLAGS+=--save-temps
+#CFLAGS+=--save-temps
 #
 LDFLAGS=-lm
 #
-ASFLAGS=-g
+ASFLAGS=-g -a
 #
 AS=as
 CC:=gcc
