@@ -9,7 +9,7 @@ _start:
         mov     $0x04,%rcx		# show 4 lines
 mainloop:
 	push	%rcx
-#        rdtscp
+        rdtscp
         shl     $32,%rdx
         or      %rax,%rdx          # full 64 bit of RDTSC
 

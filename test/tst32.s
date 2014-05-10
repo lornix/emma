@@ -21,14 +21,28 @@ _start:
 	movl	$0x63727473,msgstart
 	call	tohex
 #	==============================
+	mov	$128,%rcx
+	push	%rcx
+tryagain:
 	mov	$13,%rax	#sigaction
 	mov	$14,%rdi
 	mov	$sigstruct,%rsi
 	mov	$0,%rdx
-	mov	$8,%r10
 	syscall
 	movl	$0x61676973,msgstart
+	test	%rax,%rax
+	jnz	nogood
+#	==============================
+	pop	%rcx
+	push	%rcx
+	shl	$16,%rcx
+	and	$0xffff,%rax
+	or	%rcx,%rax
 	call	tohex
+nogood:
+	pop	%rcx
+	sub	$1,%rcx
+	jnc	tryagain
 #	==============================
 	mov	$37,%rax	#alarm
 	mov	$1,%rdi		#delay

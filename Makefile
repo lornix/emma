@@ -42,7 +42,7 @@ REVISION=$(shell git rev-parse --short HEAD)
 #
 CXXFLAGS+=-D'VERREV="$(VERSION)-$(REVISION)"'
 #
-.PHONY: all clean
+.PHONY: all clean kcov
 
 all: emma
 
@@ -62,3 +62,8 @@ utils.o: utils.cpp utils.h emma.h
 
 clean:
 	rm -f emma $(OBJS)
+
+kcov:
+	test -d kcov/ || mkdir kcov
+	kcov --exclude-path=/usr/include kcov/ ./emma emma
+	xdg-open kcov/index.html

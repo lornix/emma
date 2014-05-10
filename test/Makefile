@@ -5,7 +5,7 @@ CFLAGS+=-Wall -Wextra -Wunused
 #
 LDFLAGS=-lm
 #
-ASFLAGS=-g -a
+ASFLAGS=-g
 #
 AS=as
 CC:=gcc
