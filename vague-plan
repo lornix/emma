@@ -1,0 +1,25 @@
+A Vague Plan of attack:
+-----------------------
+
+Parse file:
+    determine type of file:
+        ELF
+        Raw
+        Library
+        Archive
+        Exe (PE)
+        DLL
+        etc...
+    from file:
+        sections (.text, .data, .bss, .etc)
+            offsets
+            contents
+        relocations? linkages?
+        symbols
+        entry point(s)
+            generally only one... but...
+        32/64 bit x86/x86_64
+            to determine code to use
+        environment (linux/bsd/dos/win9x/2k/vista/8.1/etc)
+            To decode syscalls/library calls properly
+

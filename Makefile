@@ -61,4 +61,4 @@ utils.o: utils.cpp utils.h emma.h
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -c -o $@ $<
 
 clean:
-	-rm emma $(OBJS)
+	rm -f emma $(OBJS)
