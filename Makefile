@@ -46,7 +46,7 @@ CFLAGS+=-D'VERREV="$(VERSION)-$(REVISION)"'
 
 all: emma
 
-OBJS=main.o parsefile.o utils.o
+OBJS=main.o parsefile.o
 
 emma: $(OBJS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
@@ -54,8 +54,6 @@ emma: $(OBJS)
 main.o: main.c emma.h
 
 parsefile.o: parsefile.c parsefile.h emma.h
-
-utils.o: utils.c utils.h emma.h
 
 %.o : %.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -c -o $@ $<

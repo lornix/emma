@@ -9,7 +9,6 @@
 
 #include "emma.h"
 #include "parsefile.h"
-#include "utils.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -86,15 +85,14 @@ void parsefile(const char* fname)
     printf("Loaded %d symbols\n", pi.symbols_num);
     printf("\n");
 
-    section_t* ptr1=*pi.sections;
     for (unsigned int i=0; i<pi.sections_num; ++i) {
-        printf("%08lx %08lx %s\n",ptr1->vma_start,ptr1->length,ptr1->name);
-        ptr1++;
+        printf("%08lx %08lx %s\n",pi.sections[i]->vma_start,pi.sections[i]->length,pi.sections[i]->name);
     }
-    symbol_t* ptr2=*pi.symbols;
+
+    printf("\n");
+
     for (unsigned int i=0; i<pi.symbols_num; ++i) {
-        printf("%08lx %c %s\n",ptr2->value,(int)ptr2->type,ptr2->name);
-        ptr2++;
+        printf("%08lx %c %s\n",pi.symbols[i]->value,(int)pi.symbols[i]->type,pi.symbols[i]->name);
     }
 
     /* all done, close file */
@@ -127,7 +125,7 @@ void elf_load_sections(parsefile_info_t* pi,bfd* abfd)
     /* load the sections, follow the linked list built by bfd */
     struct bfd_section* sec=abfd->sections;
 
-    pi->sections=0;
+    pi->sections=malloc(0);
     pi->sections_num=0;
 
     while (sec) {
@@ -150,6 +148,8 @@ void elf_load_sections(parsefile_info_t* pi,bfd* abfd)
 
         pi->sections=realloc(pi->sections,sizeof(section_t*)*(pi->sections_num+1));
         pi->sections[pi->sections_num]=savesection;
+        printf("D: pi->sections: %08lx (%d) = %08lx\n",(unsigned long)pi->sections,pi->sections_num,(unsigned long)savesection);
+        printf("D: name: %s size: %0lx\n",pi->sections[pi->sections_num]->name,pi->sections[pi->sections_num]->length);
         pi->sections_num++;
 
         sec=sec->next;
