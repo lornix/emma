@@ -7,11 +7,8 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <iostream>
-#include <iomanip>
-
 #include "emma.h"
 
-std::string tohex(unsigned long int value,int length=0,std::string prefix="0x");
+char* tohex(unsigned long int value,int length,const char* prefix);
 
 #endif

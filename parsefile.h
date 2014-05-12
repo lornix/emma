@@ -1,7 +1,7 @@
 /* parsefile.h */
 
 /*
- * header file for the file parsing class, it populates arrays of sections and
+ * header file for the file parsing code, it populates arrays of sections and
  * their contents, symbols and their values, file information, start address
  * whatever else I can obtain from the bfd backend for ELF/PE/a.out... type
  * files.  Eventually to have support for raw data blocks too
@@ -10,19 +10,12 @@
 #ifndef PARSEFILE_H
 #define PARSEFILE_H
 
-#include <iostream>
-#include <sstream>
-#include <iomanip>
-#include <stdexcept>
-#include <vector>
-#include <cstdlib>
-
 #include <bfd.h>
 
 #include "emma.h"
 
-typedef struct s_section {
-    std::string name;
+typedef struct section_t {
+    const char* name;
     unsigned char* contents;
     vma_t vma_start;
     vma_t vma_end;
@@ -35,8 +28,8 @@ typedef struct s_section {
     // line number info?
 } section_t;
 
-typedef struct s_symbol {
-    std::string name;
+typedef struct symbol_t {
+    const char* name;
     unsigned long int value;
     unsigned long int length;
     unsigned long int flags;
@@ -45,7 +38,7 @@ typedef struct s_symbol {
 } symbol_t;
 
 // linenumber storage (eventually)
-typedef struct s_linenum {
+typedef struct linenum_t {
     unsigned int line_number;
     union {
         symbol_t* sym;
@@ -55,59 +48,35 @@ typedef struct s_linenum {
 
 // formfeed 
 
-class parsefile
+typedef struct parsefile_info_t
 {
-public:
-    parsefile(std::string fname);
-    ~parsefile();
-private: /* variables */
-    std::string filename;
-    bfd_architecture arch;
+    const char* filename;
+    enum bfd_architecture arch;
     unsigned long mach;
-    std::string machstr;
-    std::string filetypestr;
-    std::string flavorstr;
-    bfd_flavour flavor;
+    const char* machstr;
+    const char* filetypestr;
+    const char* flavorstr;
+    enum bfd_flavour flavor;
     flagword fileflags;
     unsigned long int startaddress;
-    std::vector <section_t> sections;
-    std::vector <symbol_t> symbols;
-    bool flag_has_reloc;
-    bool flag_has_exec;
-    bool flag_has_linenums;
-    bool flag_has_debug;
-    bool flag_has_symbols;
-    bool flag_has_locals;
-    bool flag_has_dynamic;
-    bool flag_is_relaxable;
+    section_t** sections;
+    unsigned int sections_num;
+    symbol_t** symbols;
+    unsigned int symbols_num;
+    unsigned int flag_has_reloc;
+    unsigned int flag_has_exec;
+    unsigned int flag_has_linenums;
+    unsigned int flag_has_debug;
+    unsigned int flag_has_symbols;
+    unsigned int flag_has_locals;
+    unsigned int flag_has_dynamic;
+    unsigned int flag_is_relaxable;
 
-private: /* functions */
-    void elf_load_sections(bfd* abfd);
-    void elf_load_symbols(bfd* abfd);
-    std::string demangle(bfd* abfd,const char* name);
+} parsefile_info_t;
 
-    /* exceptions used by parsefile */
-public:
-    class CantOpenFile : public std::runtime_error
-    {
-     public:
-        CantOpenFile(std::string const& msg) : runtime_error(msg) { };
-    };
-    class NotValidFile : public std::runtime_error
-    {
-     public:
-        NotValidFile(std::string const& msg) : runtime_error(msg) { };
-    };
-    class OutOfMemory : public std::runtime_error
-    {
-     public:
-        OutOfMemory(std::string const& msg) : runtime_error(msg) { };
-    };
-    class GeneralError : public std::runtime_error
-    {
-     public:
-        GeneralError(std::string const& msg) : runtime_error(msg) { };
-    };
-};
+void parsefile(const char* fname);
+void elf_load_sections(parsefile_info_t* pi,bfd* abfd);
+void elf_load_symbols(parsefile_info_t* pi,bfd* abfd);
+char* demangle(bfd* abfd,const char* name);
 
 #endif
