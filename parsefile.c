@@ -148,8 +148,6 @@ void elf_load_sections(parsefile_info_t* pi,bfd* abfd)
 
         pi->sections=realloc(pi->sections,sizeof(section_t*)*(pi->sections_num+1));
         pi->sections[pi->sections_num]=savesection;
-        printf("D: pi->sections: %08lx (%d) = %08lx\n",(unsigned long)pi->sections,pi->sections_num,(unsigned long)savesection);
-        printf("D: name: %s size: %0lx\n",pi->sections[pi->sections_num]->name,pi->sections[pi->sections_num]->length);
         pi->sections_num++;
 
         sec=sec->next;

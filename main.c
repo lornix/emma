@@ -13,7 +13,7 @@
 
 int main(int argc,const char* argv[])
 {
-    printf("Ver: " VERREV "\n");
+    /* printf("Ver: " VERREV "\n"); */
 
     for (int i=1; i<argc; i++) {
         parsefile(argv[i]);
