@@ -64,4 +64,5 @@ clean:
 kcov:
 	test -d kcov/ || mkdir kcov
 	kcov --exclude-path=/usr/include kcov/ ./emma emma
+	kcov --exclude-path=/usr/include kcov/ ./emma main.o
 	xdg-open kcov/index.html

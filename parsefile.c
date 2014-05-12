@@ -60,25 +60,24 @@ void parsefile(const char* fname)
             EXITERROR("Unknown/Unhandled Architecture: %s",pi.machstr);
     }
 
-    pi.flavor=bfd_get_flavour(abfd);
-    char tmpstr[81];
-    switch (pi.flavor) {
-        case bfd_target_elf_flavour:
-            snprintf(tmpstr,80,"ELF");
-            break;
-        default:
-            snprintf(tmpstr,80,"# flavor: %d - FIXME",pi.flavor);
-    }
-    if (pi.flag_has_exec) {
-        strncat(tmpstr," (exec)",8);
-    } else {
-        strncat(tmpstr," (lib)",7);
-    }
-    pi.flavorstr=tmpstr;
     pi.filetypestr=bfd_get_target(abfd);
     printf("File: %s\n", pi.filename);
     printf("Filetype: %s\n", pi.filetypestr);
-    printf("Flavor: %s\n", pi.flavorstr);
+    pi.flavor=bfd_get_flavour(abfd);
+    printf("Flavor: ");
+    switch (pi.flavor) {
+        case bfd_target_elf_flavour:
+            printf("ELF");
+            break;
+        default:
+            printf("# flavor: %d - FIXME",pi.flavor);
+    }
+    if (pi.flag_has_exec) {
+        printf(" (exec)");
+    } else {
+        printf(" (lib)");
+    }
+    printf("\n");
     printf("Architecture: %s\n", pi.machstr);
     printf("Start Address: %08lx\n", pi.startaddress);
     printf("Loaded %d sections\n", pi.sections_num);
@@ -98,25 +97,27 @@ void parsefile(const char* fname)
     /* all done, close file */
     bfd_close(abfd);
 
-#if 0
     /* all done, clean up */
-    if (!sections.empty()) {
-        /* empty the section vector */
-        std::vector<section_t>::iterator ptr=sections.begin();
-        while (ptr!=sections.end()) {
+    if (pi.sections_num>0) {
+        /* empty the section array */
+        for (unsigned int i=0; i<pi.sections_num; ++i) {
             /* sigh, bfd used malloc to create chunk for contents */
-            if (ptr->contents) {
-                free(ptr->contents);
+            if (pi.sections[i]->contents) {
+                free(pi.sections[i]->contents);
             }
-            ptr++;
+            free(pi.sections[i]);
         }
-        sections.clear();
+        free(pi.sections);
+        pi.sections_num=0;
     }
-    if (!symbols.empty()) {
+    if (pi.symbols_num>0) {
         /* empty the symbols vector */
-        symbols.clear();
+        for (unsigned int i=0; i<pi.symbols_num; ++i) {
+            free(pi.symbols[i]);
+        }
+        free(pi.symbols);
+        pi.symbols_num=0;
     }
-#endif /* if 0 yuck! */
 }
 
 void elf_load_sections(parsefile_info_t* pi,bfd* abfd)
@@ -173,7 +174,7 @@ void elf_load_symbols(parsefile_info_t* pi,bfd* abfd)
             EXITERROR("Error while canonicalizing symbols");
         }
 
-        pi->symbols=0;
+        pi->symbols=malloc(0);
         pi->symbols_num=0;
 
         /* process regular symbols */
@@ -226,11 +227,10 @@ void elf_load_symbols(parsefile_info_t* pi,bfd* abfd)
 }
 char* demangle(bfd* abfd,const char* name)
 {
-    char* retval=(char*)name;
-    char* str=bfd_demangle(abfd,name,0);
-    if (str) {
-        retval=(char*)str;
-        /* remember! bfd malloc's mem for demangling */
+    /* remember! bfd malloc's mem for demangling */
+    char* retval=bfd_demangle(abfd,name,0);
+    if (retval==0) {
+        retval=(char*)name;
     }
     return retval;
 }
