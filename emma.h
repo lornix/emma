@@ -3,10 +3,19 @@
 #ifndef emma_H
 #define emma_H
 
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+
 /* if VERSION + REVISION not set, give a default */
 #ifndef VERREV
 #define VERREV "0.0-devel"
 #endif
+
+/*
+ * #define dbgprintf(x, ...)
+ */
+#define dbgprintf(x, ...) fprintf(stderr,x, ##__VA_ARGS__);
 
 #define EXITERROR(x, ...) \
         do { \

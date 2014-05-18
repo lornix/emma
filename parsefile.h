@@ -14,8 +14,6 @@
 
 #include "emma.h"
 
-typedef void* EMMA_HANDLE;
-
 typedef struct section_t {
     const char* name;
     unsigned char* contents;
@@ -40,20 +38,11 @@ typedef struct symbol_t {
     unsigned int sectionid;
 } symbol_t;
 
-// linenumber storage (eventually)
-typedef struct linenum_t {
-    unsigned int line_number;
-    union {
-        symbol_t* sym;
-        unsigned long offset;
-    } u;
-} linenum_t;
+typedef symbol_t EMMA_SYMBOL;
 
-// formfeed 
-
-typedef struct parsefile_info_t
-{
-    const char* filename;
+typedef struct {
+    bfd* abfd;
+    char* filename;
     enum bfd_architecture arch;
     unsigned long mach;
     const char* machstr;
@@ -75,18 +64,19 @@ typedef struct parsefile_info_t
     unsigned int flag_has_dynamic;
     unsigned int flag_is_relaxable;
 
-} parsefile_info_t;
+} EMMA_STRUCT;
 
-typedef parsefile_info_t EMMA_STRUCT;
+typedef EMMA_STRUCT* EMMA_HANDLE;
 
-void parsefile(const char* fname);
-void elf_load_sections(parsefile_info_t* pi,bfd* abfd);
-void elf_load_symbols(parsefile_info_t* pi,bfd* abfd);
-char* demangle(bfd* abfd,const char* name);
+void elf_load_sections(EMMA_HANDLE* handle,bfd* abfd);
+void elf_load_symbols(EMMA_HANDLE* handle,bfd* abfd);
 
-EMMA_HANDLE emma_open(const char* fname);
-void emma_close(EMMA_HANDLE* handle);
-int emma_section_count(EMMA_HANDLE* handle);
-EMMA_SECTION* emma_section(EMMA_HANDLE* handle,int which);
+EMMA_HANDLE emma_init();
+int emma_open(EMMA_HANDLE* handle,const char* fname);
+int emma_close(EMMA_HANDLE* handle);
+unsigned int emma_section_count(EMMA_HANDLE* handle);
+EMMA_SECTION* emma_section(EMMA_HANDLE* handle,unsigned int which);
+unsigned int emma_symbol_count(EMMA_HANDLE* handle);
+EMMA_SYMBOL* emma_symbol(EMMA_HANDLE* handle,unsigned int which);
 
 #endif

@@ -2,153 +2,158 @@
 
 /*
  * file for the file parsing code, it populates arrays of sections and their
- * contents, symbols and their values, file information, start address,
- * whatever else I can obtain from the bfd backend for ELF/PE/a.out... type
- * files.  Eventually to have support for raw data blocks too
+ * contents, symbols and their values, file information, start address, etc.
  */
+
+#define _GNU_SOURCE
 
 #include "emma.h"
 #include "parsefile.h"
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
 
-EMMA_HANDLE emma_open(const char* fname)
+EMMA_HANDLE emma_init()
 {
-    EMMA_HANDLE retval=malloc(sizeof(EMMA_STRUCT));
-    return retval;
-}
-int emma_section_count(EMMA_HANDLE* handle)
-{
-    return 0;
-}
-EMMA_SECTION* emma_section(EMMA_HANDLE* handle,int which)
-{
-    return NULL;
-}
-void emma_close(EMMA_HANDLE* handle)
-{
-    if (*handle!=0) {
-        free(*handle);
-        *handle=0;
+    EMMA_HANDLE handle=malloc(sizeof(EMMA_STRUCT));
+    if (handle==0) {
+        EXITERROR("Out of memory");
     }
-}
-
-void parsefile(const char* fname)
-{
-    parsefile_info_t pi;
-    bfd* abfd;
     bfd_init();
     bfd_set_default_target("default");
-    abfd=bfd_openr(fname,0);
-    if (!abfd) {
+    return handle;
+}
+int emma_open(EMMA_HANDLE* handle,const char* fname)
+{
+    if (*handle==0) {
+        return -1;
+    }
+    (*handle)->filename=strdup(fname);
+    (*handle)->abfd=bfd_openr(fname,0);
+    if (!(*handle)->abfd) {
         EXITERROR("Unable to open file: %s",fname);
     }
     /* make sure file is a known object type, maybe add code
        to parse bfd_archive and bfd_core, along with raw data */
-    if (!bfd_check_format(abfd,bfd_object)) {
-        bfd_close(abfd);
+    if (!bfd_check_format((*handle)->abfd,bfd_object)) {
+        bfd_close((*handle)->abfd);
         EXITERROR("Unknown/Not Handled File Type: %s",fname);
     }
 
-    pi.filename=fname;
-
-    pi.arch=bfd_get_arch(abfd);
-    pi.mach=bfd_get_mach(abfd);
-    pi.machstr=bfd_printable_arch_mach(pi.arch,pi.mach);
-    pi.fileflags=bfd_get_file_flags(abfd);
-    switch (pi.arch) {
+    (*handle)->arch=bfd_get_arch((*handle)->abfd);
+    (*handle)->mach=bfd_get_mach((*handle)->abfd);
+    (*handle)->machstr=bfd_printable_arch_mach((*handle)->arch,(*handle)->mach);
+    (*handle)->fileflags=bfd_get_file_flags((*handle)->abfd);
+    switch ((*handle)->arch) {
         case bfd_arch_i386:
-
-            pi.flag_has_reloc=pi.fileflags&HAS_RELOC;
-            pi.flag_has_exec=pi.fileflags&EXEC_P;
-            pi.flag_has_linenums=pi.fileflags&HAS_LINENO;
-            pi.flag_has_debug=pi.fileflags&HAS_DEBUG;
-            pi.flag_has_symbols=pi.fileflags&HAS_SYMS;
-            pi.flag_has_locals=pi.fileflags&HAS_LOCALS;
-            pi.flag_has_dynamic=pi.fileflags&DYNAMIC;
-            pi.flag_is_relaxable=pi.fileflags&BFD_IS_RELAXABLE;
-
-            pi.startaddress=abfd->start_address;
-            elf_load_sections(&pi,abfd);
-            elf_load_symbols(&pi,abfd);
-
+            (*handle)->flag_has_reloc=(*handle)->fileflags&HAS_RELOC;
+            (*handle)->flag_has_exec=(*handle)->fileflags&EXEC_P;
+            (*handle)->flag_has_linenums=(*handle)->fileflags&HAS_LINENO;
+            (*handle)->flag_has_debug=(*handle)->fileflags&HAS_DEBUG;
+            (*handle)->flag_has_symbols=(*handle)->fileflags&HAS_SYMS;
+            (*handle)->flag_has_locals=(*handle)->fileflags&HAS_LOCALS;
+            (*handle)->flag_has_dynamic=(*handle)->fileflags&DYNAMIC;
+            (*handle)->flag_is_relaxable=(*handle)->fileflags&BFD_IS_RELAXABLE;
+            (*handle)->startaddress=(*handle)->abfd->start_address;
+            elf_load_sections(handle,(*handle)->abfd);
+            elf_load_symbols(handle,(*handle)->abfd);
             break;
         default:
-            bfd_close(abfd);
-            EXITERROR("Unknown/Unhandled Architecture: %s",pi.machstr);
+            bfd_close((*handle)->abfd);
+            EXITERROR("Unknown/Unhandled Architecture: %s",(*handle)->machstr);
     }
 
-    pi.filetypestr=bfd_get_target(abfd);
-    printf("File: %s\n", pi.filename);
-    printf("Filetype: %s\n", pi.filetypestr);
-    pi.flavor=bfd_get_flavour(abfd);
-    printf("Flavor: ");
-    switch (pi.flavor) {
-        case bfd_target_elf_flavour:
-            printf("ELF");
-            break;
-        default:
-            printf("# flavor: %d - FIXME",pi.flavor);
-    }
-    if (pi.flag_has_exec) {
-        printf(" (exec)");
-    } else {
-        printf(" (lib)");
-    }
-    printf("\n");
-    printf("Architecture: %s\n", pi.machstr);
-    printf("Start Address: %08lx\n", pi.startaddress);
-    printf("Loaded %d sections\n", pi.sections_num);
-    printf("Loaded %d symbols\n", pi.symbols_num);
-    printf("\n");
+    (*handle)->filetypestr=bfd_get_target((*handle)->abfd);
+    (*handle)->flavor=bfd_get_flavour((*handle)->abfd);
 
-    for (unsigned int i=0; i<pi.sections_num; ++i) {
-        printf("%08lx %08lx %s\n",pi.sections[i]->vma_start,pi.sections[i]->length,pi.sections[i]->name);
+    return 0;
+}
+unsigned int emma_section_count(EMMA_HANDLE* handle)
+{
+    if (*handle==0) {
+        return 0;
     }
-
-    printf("\n");
-
-    for (unsigned int i=0; i<pi.symbols_num; ++i) {
-        printf("%08lx %c %s\n",pi.symbols[i]->value,(int)pi.symbols[i]->type,pi.symbols[i]->name);
+    return (*handle)->sections_num;
+}
+EMMA_SECTION* emma_section(EMMA_HANDLE* handle,unsigned int which)
+{
+    if (*handle==0) {
+        return NULL;
     }
-
+    if (which>=(*handle)->sections_num) {
+        return NULL;
+    }
+    return (*handle)->sections[which];
+}
+unsigned int emma_symbol_count(EMMA_HANDLE* handle)
+{
+    if (*handle==0) {
+        return 0;
+    }
+    return (*handle)->symbols_num;
+}
+EMMA_SYMBOL* emma_symbol(EMMA_HANDLE* handle,unsigned int which)
+{
+    if (*handle==0) {
+        return NULL;
+    }
+    if (which>=(*handle)->symbols_num) {
+        return NULL;
+    }
+    return (*handle)->symbols[which];
+}
+int emma_close(EMMA_HANDLE* handle)
+{
+    if (*handle==0) {
+        return 0;
+    }
     /* all done, close file */
-    bfd_close(abfd);
+    bfd_close((*handle)->abfd);
 
     /* all done, clean up */
-    if (pi.sections_num>0) {
+    if ((*handle)->sections_num>0) {
         /* empty the section array */
-        for (unsigned int i=0; i<pi.sections_num; ++i) {
+        for (unsigned int i=0; i<(*handle)->sections_num; ++i) {
             /* sigh, bfd used malloc to create chunk for contents */
-            if (pi.sections[i]->contents) {
-                free(pi.sections[i]->contents);
+            if ((*handle)->sections[i]->contents) {
+                free((*handle)->sections[i]->contents);
             }
-            free(pi.sections[i]);
+            free((*handle)->sections[i]);
         }
-        free(pi.sections);
-        pi.sections_num=0;
+        free((*handle)->sections);
+        (*handle)->sections_num=0;
     }
-    if (pi.symbols_num>0) {
+    if ((*handle)->symbols_num>0) {
         /* empty the symbols vector */
-        for (unsigned int i=0; i<pi.symbols_num; ++i) {
-            free(pi.symbols[i]);
+        for (unsigned int i=0; i<(*handle)->symbols_num; ++i) {
+            free((*handle)->symbols[i]);
         }
-        free(pi.symbols);
-        pi.symbols_num=0;
+        free((*handle)->symbols);
+        (*handle)->symbols_num=0;
     }
+    free((*handle)->filename);
+    free(*handle);
+    *handle=0;
+    return 0;
 }
 
-void elf_load_sections(parsefile_info_t* pi,bfd* abfd)
+static char* emma_demangle(bfd* abfd,const char* name)
+{
+    /* remember! bfd malloc's mem for demangling */
+    char* retval=bfd_demangle(abfd,name,0);
+    if (retval==0) {
+        retval=(char*)name;
+    }
+    return retval;
+}
+
+void elf_load_sections(EMMA_HANDLE* handle,bfd* abfd)
 {
     /* I couldn't determine a clean method to use bfd_map_over... */
     /* load the sections, follow the linked list built by bfd */
     struct bfd_section* sec=abfd->sections;
 
-    pi->sections=malloc(0);
-    pi->sections_num=0;
+    (*handle)->sections=malloc(0);
+    (*handle)->sections_num=0;
 
     while (sec) {
         section_t* savesection=malloc(sizeof(section_t));
@@ -166,14 +171,14 @@ void elf_load_sections(parsefile_info_t* pi,bfd* abfd)
             bfd_malloc_and_get_section(abfd,sec,&(savesection->contents));
         }
 
-        pi->sections=realloc(pi->sections,sizeof(section_t*)*(pi->sections_num+1));
-        pi->sections[pi->sections_num]=savesection;
-        pi->sections_num++;
+        (*handle)->sections=realloc((*handle)->sections,sizeof(section_t*)*((*handle)->sections_num+1));
+        (*handle)->sections[(*handle)->sections_num]=savesection;
+        (*handle)->sections_num++;
 
         sec=sec->next;
     }
 }
-void elf_load_symbols(parsefile_info_t* pi,bfd* abfd)
+void elf_load_symbols(EMMA_HANDLE* handle,bfd* abfd)
 {
     /* ask how big storage for symbols needs to be */
     long int datasize=bfd_get_symtab_upper_bound(abfd);
@@ -193,21 +198,21 @@ void elf_load_symbols(parsefile_info_t* pi,bfd* abfd)
             EXITERROR("Error while canonicalizing symbols");
         }
 
-        pi->symbols=malloc(0);
-        pi->symbols_num=0;
+        (*handle)->symbols=malloc(0);
+        (*handle)->symbols_num=0;
 
         /* process regular symbols */
         for (long i=0; i<numsymbols; i++) {
             symbol_t* sym=malloc(sizeof(symbol_t));
 
-            sym->name=demangle(abfd,symtable[i]->name);
+            sym->name=emma_demangle(abfd,symtable[i]->name);
             sym->value=symtable[i]->value;
             sym->flags=symtable[i]->flags;
             sym->type=bfd_decode_symclass(symtable[i]);
 
-            pi->symbols=realloc(pi->symbols,sizeof(symbol_t*)*(pi->symbols_num+1));
-            pi->symbols[pi->symbols_num]=sym;
-            pi->symbols_num++;
+            (*handle)->symbols=realloc((*handle)->symbols,sizeof(symbol_t*)*((*handle)->symbols_num+1));
+            (*handle)->symbols[(*handle)->symbols_num]=sym;
+            (*handle)->symbols_num++;
         }
         free(symtable);
     }
@@ -232,24 +237,15 @@ void elf_load_symbols(parsefile_info_t* pi,bfd* abfd)
         for (long i=0; i<dynnumsymbols; i++) {
             symbol_t* dynsym=malloc(sizeof(symbol_t));
 
-            dynsym->name=demangle(abfd,dynsymtable[i]->name);
+            dynsym->name=emma_demangle(abfd,dynsymtable[i]->name);
             dynsym->value=dynsymtable[i]->value;
             dynsym->flags=dynsymtable[i]->flags;
             dynsym->type=bfd_decode_symclass(dynsymtable[i]);
 
-            pi->symbols=realloc(pi->symbols,sizeof(symbol_t*)*(pi->symbols_num+1));
-            pi->symbols[pi->symbols_num]=dynsym;
-            pi->symbols_num++;
+            (*handle)->symbols=realloc((*handle)->symbols,sizeof(symbol_t*)*((*handle)->symbols_num+1));
+            (*handle)->symbols[(*handle)->symbols_num]=dynsym;
+            (*handle)->symbols_num++;
         }
         free(dynsymtable);
     }
-}
-char* demangle(bfd* abfd,const char* name)
-{
-    /* remember! bfd malloc's mem for demangling */
-    char* retval=bfd_demangle(abfd,name,0);
-    if (retval==0) {
-        retval=(char*)name;
-    }
-    return retval;
 }

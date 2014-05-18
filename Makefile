@@ -42,7 +42,7 @@ REVISION=$(shell git rev-parse --short HEAD)
 #
 CFLAGS+=-D'VERREV="$(VERSION)-$(REVISION)"'
 #
-.PHONY: all clean kcov
+.PHONY: all clean kcov kcov-clean
 
 all: emma
 
@@ -61,8 +61,9 @@ parsefile.o: parsefile.c parsefile.h emma.h
 clean:
 	rm -f emma $(OBJS)
 
-kcov: all
-	test -d kcov/ || mkdir kcov
-	kcov --exclude-path=/usr/include kcov/ ./emma emma
-	kcov --exclude-path=/usr/include kcov/ ./emma main.o
+kcov: all kcov-clean
+	kcov --exclude-path=/usr/include kcov/ ./emma emma $(OBJS)
 	xdg-open kcov/index.html
+
+kcov-clean:
+	rm -rf kcov
