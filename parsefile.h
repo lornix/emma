@@ -14,11 +14,12 @@
 
 #include "emma.h"
 
+typedef void* EMMA_HANDLE;
+
 typedef struct section_t {
     const char* name;
     unsigned char* contents;
-    vma_t vma_start;
-    vma_t vma_end;
+    unsigned long vma_start;
     unsigned long int length;
     unsigned int alignment; /* chaotic evil? */
     unsigned long int flags;
@@ -27,6 +28,8 @@ typedef struct section_t {
     // look at reloc_cache_entry in bfd.h
     // line number info?
 } section_t;
+
+typedef section_t EMMA_SECTION;
 
 typedef struct symbol_t {
     const char* name;
@@ -42,7 +45,7 @@ typedef struct linenum_t {
     unsigned int line_number;
     union {
         symbol_t* sym;
-        vma_t offset;
+        unsigned long offset;
     } u;
 } linenum_t;
 
@@ -74,9 +77,16 @@ typedef struct parsefile_info_t
 
 } parsefile_info_t;
 
+typedef parsefile_info_t EMMA_STRUCT;
+
 void parsefile(const char* fname);
 void elf_load_sections(parsefile_info_t* pi,bfd* abfd);
 void elf_load_symbols(parsefile_info_t* pi,bfd* abfd);
 char* demangle(bfd* abfd,const char* name);
+
+EMMA_HANDLE emma_open(const char* fname);
+void emma_close(EMMA_HANDLE* handle);
+int emma_section_count(EMMA_HANDLE* handle);
+EMMA_SECTION* emma_section(EMMA_HANDLE* handle,int which);
 
 #endif

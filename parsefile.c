@@ -15,6 +15,27 @@
 #include <string.h>
 #include <errno.h>
 
+EMMA_HANDLE emma_open(const char* fname)
+{
+    EMMA_HANDLE retval=malloc(sizeof(EMMA_STRUCT));
+    return retval;
+}
+int emma_section_count(EMMA_HANDLE* handle)
+{
+    return 0;
+}
+EMMA_SECTION* emma_section(EMMA_HANDLE* handle,int which)
+{
+    return NULL;
+}
+void emma_close(EMMA_HANDLE* handle)
+{
+    if (*handle!=0) {
+        free(*handle);
+        *handle=0;
+    }
+}
+
 void parsefile(const char* fname)
 {
     parsefile_info_t pi;
@@ -135,8 +156,6 @@ void elf_load_sections(parsefile_info_t* pi,bfd* abfd)
         savesection->name=sec->name;
         savesection->vma_start=sec->vma;
         savesection->length=sec->size;
-        /* compute end of usage.  (start,end] */
-        savesection->vma_end=sec->vma+sec->size+1;
         savesection->alignment=sec->alignment_power;
         /* TODO determine flags used */
         savesection->flags=sec->flags;

@@ -8,8 +8,6 @@
 #define VERREV "0.0-devel"
 #endif
 
-typedef unsigned long int vma_t;
-
 #define EXITERROR(x, ...) \
         do { \
             int saved_errno=errno; \
@@ -22,5 +20,8 @@ typedef unsigned long int vma_t;
             exit(1); \
         } while (0)
 
+typedef struct {
+    const char* filename;
+} emmadat;
 
 #endif

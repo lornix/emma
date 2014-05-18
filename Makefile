@@ -11,7 +11,7 @@ CFLAGS+=-g3
 # yell out all warnings and whatnot
 CFLAGS+=-Wall -Wextra -Wunused
 # make all warnings into errors
-CFLAGS+=-Werror
+#CFLAGS+=-Werror
 # link time optimization! cool! smaller exec's!
 #CFLAGS+=-flto
 #LDFLAGS+=-flto
@@ -61,7 +61,7 @@ parsefile.o: parsefile.c parsefile.h emma.h
 clean:
 	rm -f emma $(OBJS)
 
-kcov:
+kcov: all
 	test -d kcov/ || mkdir kcov
 	kcov --exclude-path=/usr/include kcov/ ./emma emma
 	kcov --exclude-path=/usr/include kcov/ ./emma main.o
