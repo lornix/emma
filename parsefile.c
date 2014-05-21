@@ -11,22 +11,27 @@
 #include "parsefile.h"
 
 #include <stdio.h>
+#include <assert.h>
 
 EMMA_HANDLE emma_init()
 {
     EMMA_HANDLE handle=malloc(sizeof(EMMA_STRUCT));
-    if (handle==0) {
-        EXITERROR("Out of memory");
-    }
+
+    assert(handle!=0);
+
     bfd_init();
     bfd_set_default_target("default");
+    /* zero out structure by default */
+    memset(handle,0,sizeof(EMMA_STRUCT));
+    /* a few things need default values */
+    handle->whichendian=little_endian;
+
     return handle;
 }
 int emma_open(EMMA_HANDLE* handle,const char* fname)
 {
-    if (*handle==0) {
-        return -1;
-    }
+    assert(*handle!=0);
+
     (*handle)->filename=strdup(fname);
     (*handle)->abfd=bfd_openr(fname,0);
     if (!(*handle)->abfd) {
@@ -69,16 +74,12 @@ int emma_open(EMMA_HANDLE* handle,const char* fname)
 }
 unsigned int emma_section_count(EMMA_HANDLE* handle)
 {
-    if (*handle==0) {
-        return 0;
-    }
+    assert(*handle!=0);
     return (*handle)->sections_num;
 }
 EMMA_SECTION* emma_section(EMMA_HANDLE* handle,unsigned int which)
 {
-    if (*handle==0) {
-        return NULL;
-    }
+    assert(*handle!=0);
     if (which>=(*handle)->sections_num) {
         return NULL;
     }
@@ -86,16 +87,14 @@ EMMA_SECTION* emma_section(EMMA_HANDLE* handle,unsigned int which)
 }
 unsigned int emma_symbol_count(EMMA_HANDLE* handle)
 {
-    if (*handle==0) {
-        return 0;
-    }
+    assert(*handle!=0);
+
     return (*handle)->symbols_num;
 }
 EMMA_SYMBOL* emma_symbol(EMMA_HANDLE* handle,unsigned int which)
 {
-    if (*handle==0) {
-        return NULL;
-    }
+    assert(*handle!=0);
+
     if (which>=(*handle)->symbols_num) {
         return NULL;
     }
@@ -103,9 +102,8 @@ EMMA_SYMBOL* emma_symbol(EMMA_HANDLE* handle,unsigned int which)
 }
 int emma_close(EMMA_HANDLE* handle)
 {
-    if (*handle==0) {
-        return 0;
-    }
+    assert(*handle!=0);
+
     /* all done, close file */
     bfd_close((*handle)->abfd);
 
@@ -152,7 +150,7 @@ void elf_load_sections(EMMA_HANDLE* handle,bfd* abfd)
     /* load the sections, follow the linked list built by bfd */
     struct bfd_section* sec=abfd->sections;
 
-    (*handle)->sections=malloc(0);
+    (*handle)->sections=0;
     (*handle)->sections_num=0;
 
     while (sec) {
@@ -184,6 +182,9 @@ void elf_load_symbols(EMMA_HANDLE* handle,bfd* abfd)
     long int datasize=bfd_get_symtab_upper_bound(abfd);
     /* negative return value indicates no symbols */
 
+    (*handle)->symbols=0;
+    (*handle)->symbols_num=0;
+
     if (datasize>0) {
         /* allocate memory to hold symbols */
         asymbol** symtable=(asymbol**)malloc(datasize);
@@ -197,9 +198,6 @@ void elf_load_symbols(EMMA_HANDLE* handle,bfd* abfd)
         if (numsymbols<0) {
             EXITERROR("Error while canonicalizing symbols");
         }
-
-        (*handle)->symbols=malloc(0);
-        (*handle)->symbols_num=0;
 
         /* process regular symbols */
         for (long i=0; i<numsymbols; i++) {

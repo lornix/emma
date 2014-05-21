@@ -14,6 +14,11 @@
 
 #include "emma.h"
 
+typedef enum {
+    little_endian,
+    big_endian
+} endianness;
+
 typedef struct section_t {
     const char* name;
     unsigned char* contents;
@@ -32,10 +37,8 @@ typedef section_t EMMA_SECTION;
 typedef struct symbol_t {
     const char* name;
     unsigned long int value;
-    unsigned long int length;
     unsigned long int flags;
     unsigned long int type;
-    unsigned int sectionid;
 } symbol_t;
 
 typedef symbol_t EMMA_SYMBOL;
@@ -63,7 +66,7 @@ typedef struct {
     unsigned int flag_has_locals;
     unsigned int flag_has_dynamic;
     unsigned int flag_is_relaxable;
-
+    endianness whichendian;
 } EMMA_STRUCT;
 
 typedef EMMA_STRUCT* EMMA_HANDLE;
