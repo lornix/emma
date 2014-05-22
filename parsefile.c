@@ -13,6 +13,9 @@
 #include <stdio.h>
 #include <assert.h>
 
+static void elf_load_sections(EMMA_HANDLE* handle,bfd* abfd);
+static void elf_load_symbols(EMMA_HANDLE* handle,bfd* abfd);
+
 EMMA_HANDLE emma_init()
 {
     EMMA_HANDLE handle=malloc(sizeof(EMMA_STRUCT));
@@ -144,7 +147,7 @@ static char* emma_demangle(bfd* abfd,const char* name)
     return retval;
 }
 
-void elf_load_sections(EMMA_HANDLE* handle,bfd* abfd)
+static void elf_load_sections(EMMA_HANDLE* handle,bfd* abfd)
 {
     /* I couldn't determine a clean method to use bfd_map_over... */
     /* load the sections, follow the linked list built by bfd */
@@ -176,7 +179,7 @@ void elf_load_sections(EMMA_HANDLE* handle,bfd* abfd)
         sec=sec->next;
     }
 }
-void elf_load_symbols(EMMA_HANDLE* handle,bfd* abfd)
+static void elf_load_symbols(EMMA_HANDLE* handle,bfd* abfd)
 {
     /* ask how big storage for symbols needs to be */
     long int datasize=bfd_get_symtab_upper_bound(abfd);

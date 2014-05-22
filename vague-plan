@@ -23,3 +23,4 @@ Parse file:
         environment (linux/bsd/dos/win9x/2k/vista/8.1/etc)
             To decode syscalls/library calls properly
 
+0x400000 + 0x8048000

@@ -71,9 +71,6 @@ typedef struct {
 
 typedef EMMA_STRUCT* EMMA_HANDLE;
 
-void elf_load_sections(EMMA_HANDLE* handle,bfd* abfd);
-void elf_load_symbols(EMMA_HANDLE* handle,bfd* abfd);
-
 EMMA_HANDLE emma_init();
 int emma_open(EMMA_HANDLE* handle,const char* fname);
 int emma_close(EMMA_HANDLE* handle);
