@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -16,18 +17,12 @@ int main(int argc,char* argv[])
     int wait_val;           /*  child's return value        */
     int pid;                /*  child's process id          */
     char *arg0;             /* argv[0] pointer              */
-    char *arg1;             /* argv[1] pointer              */
 
     if (argc<2) {
-        arg0=strrchr(argv[0],'/');
-        if (arg0==NULL) arg0=argv[0]-1;
-        arg0++;
+        arg0=basename(strdup(argv[0]));
         fprintf(stderr,"%s: Usage:\n\t%s prog [args] ...\n",arg0,arg0);
         return 1;
     }
-    arg1=strrchr(argv[1],'/');
-    if (arg1==NULL) arg1=argv[1]-1;
-    arg1++;
 
     switch (pid = fork()) {
         case -1:
@@ -39,7 +34,7 @@ int main(int argc,char* argv[])
              *  must be called in order to allow the
              *  control over the child process
              */
-            execl(argv[1],arg1,argv+2,NULL);
+            execl(argv[1],argv[1],*(argv+2),NULL);
             /*
              *  executes the program and causes
              *  the child to stop and send a signal
@@ -54,7 +49,7 @@ int main(int argc,char* argv[])
              *   parent waits for child to stop at next
              *   instruction (execl())
              */
-            while (wait_val == 1407 ) {
+            while (wait_val == W_STOPCODE(SIGTRAP)) {
                 counter++;
                 if (ptrace(PTRACE_SINGLESTEP, pid, 0, 0) != 0)
                     perror("ptrace");
@@ -68,11 +63,11 @@ int main(int argc,char* argv[])
             }
             /*
              * continue to stop, wait and release until
-             * the child is finished; wait_val != 1407
-             * Low=0177L and High=05 (SIGTRAP)
+             * the child is finished; wait_val != 0x57f (1407)
+             * Low=0177 and High=05 (SIGTRAP)
              */
     }
     setlocale(LC_ALL,"");
-    printf("Number of machine instructions : %'lld\n", counter);
+    fprintf(stderr,"Number of machine instructions : %'lld\n", counter);
     return 0;
 }
