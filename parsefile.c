@@ -38,13 +38,15 @@ int emma_open(EMMA_HANDLE* handle,const char* fname)
     (*handle)->filename=strdup(fname);
     (*handle)->abfd=bfd_openr(fname,0);
     if (!(*handle)->abfd) {
-        EXITERROR("Unable to open file: %s",fname);
+        return 1;
     }
     /* make sure file is a known object type, maybe add code
        to parse bfd_archive and bfd_core, along with raw data */
     if (!bfd_check_format((*handle)->abfd,bfd_object)) {
         bfd_close((*handle)->abfd);
-        EXITERROR("Unknown/Not Handled File Type: %s",fname);
+        (*handle)->abfd=0;
+        errno=61;
+        return 1;
     }
 
     (*handle)->arch=bfd_get_arch((*handle)->abfd);
@@ -67,7 +69,8 @@ int emma_open(EMMA_HANDLE* handle,const char* fname)
             break;
         default:
             bfd_close((*handle)->abfd);
-            EXITERROR("Unknown/Unhandled Architecture: %s",(*handle)->machstr);
+            (*handle)->abfd=0;
+            return 1;
     }
 
     (*handle)->filetypestr=bfd_get_target((*handle)->abfd);
@@ -108,7 +111,9 @@ int emma_close(EMMA_HANDLE* handle)
     assert(*handle!=0);
 
     /* all done, close file */
-    bfd_close((*handle)->abfd);
+    if ((*handle)->abfd!=0) {
+        bfd_close((*handle)->abfd);
+    }
 
     /* all done, clean up */
     if ((*handle)->sections_num>0) {
@@ -190,16 +195,20 @@ static void elf_load_symbols(EMMA_HANDLE* handle,bfd* abfd)
 
     if (datasize>0) {
         /* allocate memory to hold symbols */
-        asymbol** symtable=(asymbol**)malloc(datasize);
+        asymbol** symtable=malloc(datasize);
 
         if (!symtable) {
             /* couldn't allocate memory? very odd */
-            EXITERROR("Error allocating memory for symtable");
+            SHOWERROR("Error allocating memory for symtable");
+            exit(1);
+            return;
         }
 
         long numsymbols=bfd_canonicalize_symtab(abfd,symtable);
         if (numsymbols<0) {
-            EXITERROR("Error while canonicalizing symbols");
+            SHOWERROR("Error while canonicalizing symbols");
+            exit(1);
+            return;
         }
 
         /* process regular symbols */
@@ -223,16 +232,20 @@ static void elf_load_symbols(EMMA_HANDLE* handle,bfd* abfd)
 
     if (dyndatasize>0) {
         /* allocate memory to hold symbols */
-        asymbol** dynsymtable=(asymbol**)malloc(dyndatasize);
+        asymbol** dynsymtable=malloc(dyndatasize);
 
         if (!dynsymtable) {
             /* couldn't allocate memory? very odd */
-            EXITERROR("Error allocating memory for dynamic symtable");
+            SHOWERROR("Error allocating memory for dynamic symtable");
+            exit(1);
+            return;
         }
 
         long dynnumsymbols=bfd_canonicalize_dynamic_symtab(abfd,dynsymtable);
         if (dynnumsymbols<0) {
-            EXITERROR("Error while canonicalizing dynamic symbols");
+            SHOWERROR("Error while canonicalizing dynamic symbols");
+            exit(1);
+            return;
         }
         /* process dynamic symbols */
         for (long i=0; i<dynnumsymbols; i++) {

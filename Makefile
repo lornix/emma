@@ -39,10 +39,11 @@ SHELL=/bin/sh
 # build VERREV macro
 VERSION=$(shell cat VERSION)
 REVISION=$(shell git rev-parse --short HEAD)
+VERREV=$(VERSION)-$(REVISION)
 #
-CFLAGS+=-D'VERREV="$(VERSION)-$(REVISION)"'
+CFLAGS+=-D'VERREV="$(VERREV)"'
 #
-.PHONY: all clean kcov kcov-clean
+.PHONY: all clean kcov kcov-clean kcov-show
 
 all: emma
 
@@ -61,8 +62,15 @@ parsefile.o: parsefile.c parsefile.h emma.h
 clean:
 	rm -f emma $(OBJS)
 
-kcov: all kcov-clean
-	kcov --exclude-path=/usr/include kcov/ ./emma emma $(OBJS)
+kcov: all
+	@rm -f /tmp/empty-file-$(VERSION) /tmp/unreadable-file-$(VERSION) /tmp/non-existent-file-$(VERSION)
+	@touch /tmp/empty-file-$(VERSION) /tmp/unreadable-file-$(VERSION)
+	@chmod 000 /tmp/unreadable-file-$(VERSION)
+	-kcov --skip-solibs kcov/ ./emma emma $(OBJS) /tmp/empty-file-$(VERSION) /tmp/unreadable-file-$(VERSION) /tmp/non-existent-file-$(VERSION)
+	@rm -f /tmp/empty-file-$(VERSION) /tmp/unreadable-file-$(VERSION) /tmp/non-existent-file-$(VERSION)
+	@kcov --report-only kcov/ ./emma
+
+kcov-show:
 	xdg-open kcov/index.html
 
 kcov-clean:

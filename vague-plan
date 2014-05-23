@@ -24,3 +24,75 @@ Parse file:
             To decode syscalls/library calls properly
 
 0x400000 + 0x8048000
+
+compatibility mode: 8 bit register encoding: 0-7
+    enum {al=0,cl,dl,bl,ah,ch,dh,bh=7};
+compatibility mode: 16 bit register encoding: 0-7
+    enum {ax=0,cx,dx,bx,sp,bp,si,di=7};
+compatibility mode: 32 bit register encoding: 0-7
+    enum {eax=0,ecx,edx,ebx,esp,ebp,esi,edi=7};
+
+64bit mode: 8 bit register encoding: 0-15
+    enum w/rex prefix {al=0,cl,dl,bl,spl,bpl,sil,dil,r8b,r9b,r10b,r11b,r12b,r13b,r14b,r15b=15};
+    enum wo/rex prefix {al=0,cl,dl,bl,spl,bpl,sil,dil,r8b,r9b,r10b,r11b,r12b,r13b,r14b,r15b=15};
+
+REX prefixes:
+=============
+0x48 - size (64 bit?)
+none - 32 bit
+0x66 - 16 bit size override
+
+/* x86 instructions + lots of info
+ *
+ */
+
+void x86_()
+{
+    // Mnemonic:
+    // Description:
+    // Opcode:
+    // Modified Regs:
+    // Modified FLAGS:
+    // Undefined FLAGS:
+    // Not Valid Modes:
+    // Exceptions:
+    // Pseudo:
+}
+
+void x86_aaa()
+{
+    // Mnemonic: AAA
+    // Description: ASCII Adjust After Addition
+    // Opcode: AAA - 37
+    // Modified Regs: AL,AH
+    // Modified FLAGS: CF,AF
+    // Undefined FLAGS: OF,SF,ZF,PF
+    // Not Valid Modes: protected
+    // Exceptions:
+    //      #UD - instruction executed in 64bit mode
+    // Pseudo:
+    //  if ((AL&0xf)>9)||(AF==1) {
+    //      AH++; AL+=6; CF=1; AF=1;
+    //  } else {
+    //      CF=0; AF=0;
+    //  }
+    //  AL&=0xf;
+}
+
+void x86_aad()
+{
+    // Mnemonic: AAD
+    // Description: ASCII Adjust Before Division
+    // Opcode: AAD    - D5 0A
+    // Opcode: (none) - D5 ib
+    // Modified Regs: AL,AH
+    // Modified FLAGS: SF,ZF,PF
+    // Undefined FLAGS: OF,AF,CF
+    // Not Valid Modes: protected
+    // Exceptions:
+    //      #UD - instruction executed in 64bit mode
+    // Pseudo:
+    //  AL=((10*AH)+(AL)); AH=0;
+    //  -or-
+    //  AL=(((ib)*AH)+(AL)); AH=0;
+}

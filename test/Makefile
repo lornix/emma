@@ -29,13 +29,13 @@ all: $(EXECS)
 	$(CXX) $(CFLAGS) $(LDFLAGS) -c $< -o $@.o
 	$(CXX) $(CFLAGS) $(LDFLAGS) $@.o -o $@
 
-%32 :%32.s
-	$(AS) --32 $(ASFLAGS) $< -o $@.o
-	$(LD) -melf_i386 $@.o -o $@
-
 % :%.s
 	$(AS) $(ASFLAGS) $< -o $@.o
 	$(LD) $@.o -o $@
+
+%32 :%32.s
+	$(AS) --32 $(ASFLAGS) $< -o $@.o
+	$(LD) -melf_i386 $@.o -o $@
 
 clean:
 	rm -f *.o $(EXECS)
