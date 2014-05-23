@@ -28,5 +28,5 @@ _start:
 #
 msgstart:
 	.ascii	"Hello World!"
-	.byte	0x0a
+	.byte	0x0a,0
 msglen = . - msgstart
