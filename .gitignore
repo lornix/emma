@@ -1,5 +1,7 @@
 emma
 *.o
+test/asm_hello
+test/asm_hello32
 test/countinstr
 test/environ
 test/locale_commas
@@ -8,6 +10,6 @@ test/rdtsc
 test/rscalc
 test/sqrt
 test/tracer1
-test/tst32
+test/tst64
 test/tstalarm
 kcov/
