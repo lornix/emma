@@ -13,26 +13,26 @@
 #include <stdio.h>
 #include <assert.h>
 
-static void elf_load_sections(EMMA_HANDLE* handle,bfd* abfd);
-static void elf_load_symbols(EMMA_HANDLE* handle,bfd* abfd);
+static void elf_load_sections(emma_handle* handle,bfd* abfd);
+static void elf_load_symbols(emma_handle* handle,bfd* abfd);
 static char* emma_demangle(bfd* abfd,const char* name);
 
-EMMA_HANDLE emma_init()
+emma_handle emma_init()
 {
-    EMMA_HANDLE handle=malloc(sizeof(EMMA_STRUCT));
+    emma_handle handle=malloc(sizeof(emma_struct_t));
 
     assert(handle!=0);
 
     bfd_init();
     bfd_set_default_target("default");
     /* zero out structure by default */
-    memset(handle,0,sizeof(EMMA_STRUCT));
+    memset(handle,0,sizeof(emma_struct_t));
     /* a few things need default values */
     handle->whichendian=little_endian;
 
     return handle;
 }
-int emma_open(EMMA_HANDLE* handle,const char* fname)
+int emma_open(emma_handle* handle,const char* fname)
 {
     assert(*handle!=0);
 
@@ -79,12 +79,12 @@ int emma_open(EMMA_HANDLE* handle,const char* fname)
 
     return 0;
 }
-unsigned int emma_section_count(EMMA_HANDLE* handle)
+unsigned int emma_section_count(emma_handle* handle)
 {
     assert(*handle!=0);
     return (*handle)->sections_num;
 }
-EMMA_SECTION* emma_section(EMMA_HANDLE* handle,unsigned int which)
+emma_section_t* emma_section(emma_handle* handle,unsigned int which)
 {
     assert(*handle!=0);
     if (which>=(*handle)->sections_num) {
@@ -92,13 +92,13 @@ EMMA_SECTION* emma_section(EMMA_HANDLE* handle,unsigned int which)
     }
     return (*handle)->sections[which];
 }
-unsigned int emma_symbol_count(EMMA_HANDLE* handle)
+unsigned int emma_symbol_count(emma_handle* handle)
 {
     assert(*handle!=0);
 
     return (*handle)->symbols_num;
 }
-EMMA_SYMBOL* emma_symbol(EMMA_HANDLE* handle,unsigned int which)
+emma_symbol_t* emma_symbol(emma_handle* handle,unsigned int which)
 {
     assert(*handle!=0);
 
@@ -107,7 +107,7 @@ EMMA_SYMBOL* emma_symbol(EMMA_HANDLE* handle,unsigned int which)
     }
     return (*handle)->symbols[which];
 }
-int emma_close(EMMA_HANDLE* handle)
+int emma_close(emma_handle* handle)
 {
     assert(*handle!=0);
 
@@ -156,7 +156,7 @@ static char* emma_demangle(bfd* abfd,const char* name)
     return retval;
 }
 
-static void elf_load_sections(EMMA_HANDLE* handle,bfd* abfd)
+static void elf_load_sections(emma_handle* handle,bfd* abfd)
 {
     /* I couldn't determine a clean method to use bfd_map_over... */
     /* load the sections, follow the linked list built by bfd */
@@ -188,7 +188,7 @@ static void elf_load_sections(EMMA_HANDLE* handle,bfd* abfd)
         sec=sec->next;
     }
 }
-static void elf_load_symbols(EMMA_HANDLE* handle,bfd* abfd)
+static void elf_load_symbols(emma_handle* handle,bfd* abfd)
 {
     /* ask how big storage for symbols needs to be */
     long int datasize=bfd_get_symtab_upper_bound(abfd);

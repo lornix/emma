@@ -32,7 +32,7 @@ typedef struct section_t {
     // line number info?
 } section_t;
 
-typedef section_t EMMA_SECTION;
+typedef section_t emma_section_t;
 
 typedef struct symbol_t {
     const char* name;
@@ -41,7 +41,7 @@ typedef struct symbol_t {
     unsigned long int type;
 } symbol_t;
 
-typedef symbol_t EMMA_SYMBOL;
+typedef symbol_t emma_symbol_t;
 
 typedef struct {
     bfd* abfd;
@@ -67,16 +67,16 @@ typedef struct {
     unsigned int flag_has_dynamic;
     unsigned int flag_is_relaxable;
     endianness whichendian;
-} EMMA_STRUCT;
+} emma_struct_t;
 
-typedef EMMA_STRUCT* EMMA_HANDLE;
+typedef emma_struct_t* emma_handle;
 
-EMMA_HANDLE emma_init();
-int emma_open(EMMA_HANDLE* handle,const char* fname);
-int emma_close(EMMA_HANDLE* handle);
-unsigned int emma_section_count(EMMA_HANDLE* handle);
-EMMA_SECTION* emma_section(EMMA_HANDLE* handle,unsigned int which);
-unsigned int emma_symbol_count(EMMA_HANDLE* handle);
-EMMA_SYMBOL* emma_symbol(EMMA_HANDLE* handle,unsigned int which);
+emma_handle emma_init();
+int emma_open(emma_handle* handle,const char* fname);
+int emma_close(emma_handle* handle);
+unsigned int emma_section_count(emma_handle* handle);
+emma_section_t* emma_section(emma_handle* handle,unsigned int which);
+unsigned int emma_symbol_count(emma_handle* handle);
+emma_symbol_t* emma_symbol(emma_handle* handle,unsigned int which);
 
 #endif
