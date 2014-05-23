@@ -17,7 +17,7 @@
  */
 #define dbgprintf(x, ...) fprintf(stderr,x, ##__VA_ARGS__);
 
-#define SHOWERROR(x, ...) \
+#define EXITERROR(x, ...) \
         do { \
             int saved_errno=errno; \
             fprintf(stderr,"%s:%d\n  ",__func__,__LINE__); \
@@ -26,6 +26,7 @@
             if (saved_errno!=0) { \
               fprintf(stderr,"  %s\n",strerror(saved_errno)); \
             } \
+            exit(1); \
         } while (0)
 
 typedef struct {

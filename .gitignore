@@ -4,6 +4,7 @@ test/asm_hello
 test/asm_hello32
 test/countinstr
 test/environ
+test/hello_cpp
 test/locale_commas
 test/pokefunction
 test/rdtsc

@@ -15,14 +15,18 @@ int main(int argc,const char* argv[])
 {
     /* printf("Ver: " VERREV "\n"); */
 
-    for (int i=1; i<argc; ++i) {
-        EMMA_HANDLE handle=emma_init();
-        int err=emma_open(&handle,argv[i]);
-        if (err!=0) {
-            SHOWERROR("Unable to open file: %s",argv[i]);
-            continue;
-        }
-        printf("File: %s\n",argv[i]);
+    if (argc<2) {
+        fprintf(stderr,"Please supply a filename to analyze\n");
+        exit(1);
+    }
+    int arg=1;
+    EMMA_HANDLE handle=emma_init();
+    int err=emma_open(&handle,argv[arg]);
+    if (err!=0) {
+        EXITERROR("Unable to open file: %s",argv[arg]);
+    }
+    printf("File: %s\n",argv[arg]);
+    if (emma_section_count(&handle)>0) {
         printf("%d sections\n",emma_section_count(&handle));
         for (unsigned int j=0; j<emma_section_count(&handle); ++j) {
             EMMA_SECTION* section=emma_section(&handle,j);
@@ -39,6 +43,8 @@ int main(int argc,const char* argv[])
             }
             printf("] %s\n",section->name);
         }
+    }
+    if (emma_symbol_count(&handle)>0) {
         printf("%d symbols\n",emma_symbol_count(&handle));
         for (unsigned int j=0; j<emma_symbol_count(&handle); ++j) {
             EMMA_SYMBOL* symbol=emma_symbol(&handle,j);
@@ -48,8 +54,8 @@ int main(int argc,const char* argv[])
             printf("%s",symbol->name);
             printf("\n");
         }
-        emma_close(&handle);
     }
+    emma_close(&handle);
 
     return 0;
 }

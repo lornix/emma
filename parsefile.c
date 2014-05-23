@@ -15,6 +15,7 @@
 
 static void elf_load_sections(EMMA_HANDLE* handle,bfd* abfd);
 static void elf_load_symbols(EMMA_HANDLE* handle,bfd* abfd);
+static char* emma_demangle(bfd* abfd,const char* name);
 
 EMMA_HANDLE emma_init()
 {
@@ -45,7 +46,7 @@ int emma_open(EMMA_HANDLE* handle,const char* fname)
     if (!bfd_check_format((*handle)->abfd,bfd_object)) {
         bfd_close((*handle)->abfd);
         (*handle)->abfd=0;
-        errno=61;
+        errno=61; /* no data available */
         return 1;
     }
 
@@ -131,6 +132,7 @@ int emma_close(EMMA_HANDLE* handle)
     if ((*handle)->symbols_num>0) {
         /* empty the symbols vector */
         for (unsigned int i=0; i<(*handle)->symbols_num; ++i) {
+            free((void*)(*handle)->symbols[i]->name);
             free((*handle)->symbols[i]);
         }
         free((*handle)->symbols);
@@ -147,8 +149,10 @@ static char* emma_demangle(bfd* abfd,const char* name)
     /* remember! bfd malloc's mem for demangling */
     char* retval=bfd_demangle(abfd,name,0);
     if (retval==0) {
-        retval=(char*)name;
+        /* make our own copy */
+        return strdup(name);
     }
+    /* either way, we return a newly malloc'd COPY */
     return retval;
 }
 
@@ -199,16 +203,12 @@ static void elf_load_symbols(EMMA_HANDLE* handle,bfd* abfd)
 
         if (!symtable) {
             /* couldn't allocate memory? very odd */
-            SHOWERROR("Error allocating memory for symtable");
-            exit(1);
-            return;
+            EXITERROR("Error allocating memory for symtable");
         }
 
         long numsymbols=bfd_canonicalize_symtab(abfd,symtable);
         if (numsymbols<0) {
-            SHOWERROR("Error while canonicalizing symbols");
-            exit(1);
-            return;
+            EXITERROR("Error while canonicalizing symbols");
         }
 
         /* process regular symbols */
@@ -236,16 +236,12 @@ static void elf_load_symbols(EMMA_HANDLE* handle,bfd* abfd)
 
         if (!dynsymtable) {
             /* couldn't allocate memory? very odd */
-            SHOWERROR("Error allocating memory for dynamic symtable");
-            exit(1);
-            return;
+            EXITERROR("Error allocating memory for dynamic symtable");
         }
 
         long dynnumsymbols=bfd_canonicalize_dynamic_symtab(abfd,dynsymtable);
         if (dynnumsymbols<0) {
-            SHOWERROR("Error while canonicalizing dynamic symbols");
-            exit(1);
-            return;
+            EXITERROR("Error while canonicalizing dynamic symbols");
         }
         /* process dynamic symbols */
         for (long i=0; i<dynnumsymbols; i++) {
