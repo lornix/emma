@@ -47,16 +47,13 @@ CFLAGS+=-D'VERREV="$(VERREV)"'
 
 all: emma
 
-OBJS=main.o parsefile.o
+OBJS=$(addsuffix .o,$(basename $(wildcard *.c)))
+HDRS=$(wildcard *.h)
 
 emma: $(OBJS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
-main.o: main.c emma.h
-
-parsefile.o: parsefile.c parsefile.h emma.h
-
-%.o : %.c
+%.o : %.c $(HDRS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -c -o $@ $<
 
 clean:
