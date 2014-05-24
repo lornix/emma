@@ -5,257 +5,237 @@
  * contents, symbols and their values, file information, start address, etc.
  */
 
-#define _GNU_SOURCE
-
 #include "emma.h"
+
 #include "parsefile.h"
+
+#include <elf.h>
 
 #include <stdio.h>
 #include <assert.h>
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
 
-static void elf_load_sections(emma_handle* handle,bfd* abfd);
-static void elf_load_symbols(emma_handle* handle,bfd* abfd);
-static char* emma_demangle(bfd* abfd,const char* name);
+static int create_section(emma_handle* H,
+        const char* name,
+        unsigned long vma_start,
+        unsigned long length,
+        int alignment,
+        unsigned long flags,
+        char* contents);
+static int create_symbol(emma_handle* H,
+        const char* name,
+        unsigned long value,
+        unsigned long flags,
+        unsigned long symtype);
+
+char* filetype_str(filetype_t filetype)
+{
+    /* needs to be kept in sync with filetype_t enum */
+    char* retval[]={"Unknown","Raw32","Raw64","Elf32","Elf64","Lib32","Lib64"};
+    return retval[filetype];
+}
+
+static char* demangle(const char* name)
+{
+    /* TODO: find easier-to-use demangler */
+    return strdup(name);
+}
 
 emma_handle emma_init()
 {
-    emma_handle handle=malloc(sizeof(emma_struct_t));
+    emma_handle H=malloc(sizeof(struct_t));
 
-    assert(handle!=0);
+    assert(H!=0);
 
-    bfd_init();
-    bfd_set_default_target("default");
     /* zero out structure by default */
-    memset(handle,0,sizeof(emma_struct_t));
+    memset(H,0,sizeof(struct_t));
     /* a few things need default values */
-    handle->whichendian=little_endian;
+    H->whichendian=LITEND;
+    H->baseaddress=0;
+    H->startaddress=H->baseaddress;
+    H->filetype=FILETYPE_UNKNOWN;
 
-    return handle;
+    return H;
 }
-int emma_open(emma_handle* handle,const char* fname)
+int emma_open(emma_handle* H,const char* fname)
 {
-    assert(*handle!=0);
+    assert(*H!=0);
 
-    (*handle)->filename=strdup(fname);
-    (*handle)->abfd=bfd_openr(fname,0);
-    if (!(*handle)->abfd) {
-        return 1;
-    }
-    /* make sure file is a known object type, maybe add code
-       to parse bfd_archive and bfd_core, along with raw data */
-    if (!bfd_check_format((*handle)->abfd,bfd_object)) {
-        bfd_close((*handle)->abfd);
-        (*handle)->abfd=0;
-        errno=61; /* no data available */
+    (*H)->filename=strdup(fname);
+
+    (*H)->fd=open(fname,O_RDONLY);
+    if ((*H)->fd==0) {
+        /* issue opening file? */
         return 1;
     }
 
-    (*handle)->arch=bfd_get_arch((*handle)->abfd);
-    (*handle)->mach=bfd_get_mach((*handle)->abfd);
-    (*handle)->machstr=bfd_printable_arch_mach((*handle)->arch,(*handle)->mach);
-    (*handle)->fileflags=bfd_get_file_flags((*handle)->abfd);
-    switch ((*handle)->arch) {
-        case bfd_arch_i386:
-            (*handle)->flag_has_reloc=(*handle)->fileflags&HAS_RELOC;
-            (*handle)->flag_has_exec=(*handle)->fileflags&EXEC_P;
-            (*handle)->flag_has_linenums=(*handle)->fileflags&HAS_LINENO;
-            (*handle)->flag_has_debug=(*handle)->fileflags&HAS_DEBUG;
-            (*handle)->flag_has_symbols=(*handle)->fileflags&HAS_SYMS;
-            (*handle)->flag_has_locals=(*handle)->fileflags&HAS_LOCALS;
-            (*handle)->flag_has_dynamic=(*handle)->fileflags&DYNAMIC;
-            (*handle)->flag_is_relaxable=(*handle)->fileflags&BFD_IS_RELAXABLE;
-            (*handle)->startaddress=(*handle)->abfd->start_address;
-            elf_load_sections(handle,(*handle)->abfd);
-            elf_load_symbols(handle,(*handle)->abfd);
-            break;
-        default:
-            bfd_close((*handle)->abfd);
-            (*handle)->abfd=0;
-            return 1;
+    struct stat stats;
+    if (fstat((*H)->fd,&stats)<0) {
+        /* issue obtaining stats? */
+        close((*H)->fd);
+        return 1;
     }
 
-    (*handle)->filetypestr=bfd_get_target((*handle)->abfd);
-    (*handle)->flavor=bfd_get_flavour((*handle)->abfd);
+    /* might be more we need to copy over */
+    (*H)->length=stats.st_size;
+
+    char* mmapaddr=mmap(NULL,(*H)->length,PROT_READ,MAP_SHARED,(*H)->fd,0);
+    if (mmapaddr==MAP_FAILED) {
+        close((*H)->fd);
+        return 1;
+    }
+
+    (*H)->mmap=mmapaddr;
+
+    if (memcmp(mmapaddr,ELFMAG,SELFMAG)!=0) {
+        /* not an ELF file of any sort */
+        (*H)->filetype=FILETYPE_RAW64;
+        /* it'll be an option later, for now.. done! */
+        (*H)->whichendian=LITEND;
+        /* we need to create a raw section to hold contents*/
+        create_section(H,".raw_data",0x0,(*H)->length,0,0x0,mmapaddr);
+        return 0;
+    }
+
+    /* 32 bit? 64 bit? unknown? */
+    if (mmapaddr[EI_CLASS]==ELFCLASS32) {
+        (*H)->filetype=FILETYPE_ELF32;
+    } else if (mmapaddr[EI_CLASS]==ELFCLASS64) {
+        (*H)->filetype=FILETYPE_ELF64;
+    } else {
+        (*H)->filetype=FILETYPE_UNKNOWN;
+    }
+
+    /* endianness? */
+    if (mmapaddr[EI_DATA]==ELFDATA2LSB) {
+        (*H)->whichendian=LITEND;
+    } else if (mmapaddr[EI_DATA]==ELFDATA2MSB) {
+        (*H)->whichendian=BIGEND;
+    } else {
+        /* as a fallback, just in case */
+        (*H)->whichendian=LITEND;
+    }
+
+    /* check ELF version */
+    if (mmapaddr[EI_VERSION]!=EV_CURRENT) {
+        /* TODO:perhaps a 'problem' entry? */
+        fprintf(stderr,"PROBLEM: EI_VERSION!=EV_CURRENT (%d)\n",mmapaddr[EI_VERSION]);
+    }
+
+    /* check ABI in use, or zero value */
+    if ((mmapaddr[EI_OSABI]!=ELFOSABI_GNU)&&(mmapaddr[EI_OSABI]!=0)) {
+        /* TODO:perhaps a 'problem' entry? */
+        fprintf(stderr,"PROBLEM: EI_OSABI!=ELFOSABI_GNU (%d)\n",mmapaddr[EI_OSABI]);
+    }
+
+    Elf64_Ehdr* elfheader=(Elf64_Ehdr*)mmapaddr;
 
     return 0;
 }
-unsigned int emma_section_count(emma_handle* handle)
+unsigned int emma_section_count(emma_handle* H)
 {
-    assert(*handle!=0);
-    return (*handle)->sections_num;
+    assert(*H!=0);
+    return (*H)->section_count;
 }
-emma_section_t* emma_section(emma_handle* handle,unsigned int which)
+section_t* emma_section(emma_handle* H,unsigned int which)
 {
-    assert(*handle!=0);
-    if (which>=(*handle)->sections_num) {
+    assert(*H!=0);
+    if (which>=(*H)->section_count) {
         return NULL;
     }
-    return (*handle)->sections[which];
+    return (*H)->sections[which];
 }
-unsigned int emma_symbol_count(emma_handle* handle)
+unsigned int emma_symbol_count(emma_handle* H)
 {
-    assert(*handle!=0);
+    assert(*H!=0);
 
-    return (*handle)->symbols_num;
+    return (*H)->symbol_count;
 }
-emma_symbol_t* emma_symbol(emma_handle* handle,unsigned int which)
+symbol_t* emma_symbol(emma_handle* H,unsigned int which)
 {
-    assert(*handle!=0);
+    assert(*H!=0);
 
-    if (which>=(*handle)->symbols_num) {
+    if (which>=(*H)->symbol_count) {
         return NULL;
     }
-    return (*handle)->symbols[which];
+    return (*H)->symbols[which];
 }
-int emma_close(emma_handle* handle)
+int emma_close(emma_handle* H)
 {
-    assert(*handle!=0);
+    assert(*H!=0);
+
+    /* release mmapping */
+    munmap((*H)->mmap,(*H)->length);
 
     /* all done, close file */
-    if ((*handle)->abfd!=0) {
-        bfd_close((*handle)->abfd);
-    }
+    close((*H)->fd);
 
     /* all done, clean up */
-    if ((*handle)->sections_num>0) {
+    if ((*H)->section_count>0) {
         /* empty the section array */
-        for (unsigned int i=0; i<(*handle)->sections_num; ++i) {
-            /* sigh, bfd used malloc to create chunk for contents */
-            if ((*handle)->sections[i]->contents) {
-                free((*handle)->sections[i]->contents);
-            }
-            free((*handle)->sections[i]);
+        for (unsigned int i=0; i<(*H)->section_count; ++i) {
+            free((*H)->sections[i]);
         }
-        free((*handle)->sections);
-        (*handle)->sections_num=0;
+        free((*H)->sections);
+        (*H)->section_count=0;
     }
-    if ((*handle)->symbols_num>0) {
+    if ((*H)->symbol_count>0) {
         /* empty the symbols vector */
-        for (unsigned int i=0; i<(*handle)->symbols_num; ++i) {
-            free((void*)(*handle)->symbols[i]->name);
-            free((*handle)->symbols[i]);
+        for (unsigned int i=0; i<(*H)->symbol_count; ++i) {
+            free((void*)(*H)->symbols[i]->name);
+            free((*H)->symbols[i]);
         }
-        free((*handle)->symbols);
-        (*handle)->symbols_num=0;
+        free((*H)->symbols);
+        (*H)->symbol_count=0;
     }
-    free((*handle)->filename);
-    free(*handle);
-    *handle=0;
+    free((*H)->filename);
+    free(*H);
+    *H=0;
     return 0;
 }
 
-static char* emma_demangle(bfd* abfd,const char* name)
+static int create_section(emma_handle* H,
+        const char* name,
+        unsigned long vma_start,
+        unsigned long length,
+        int alignment,
+        unsigned long flags,
+        char* contents)
 {
-    /* remember! bfd malloc's mem for demangling */
-    char* retval=bfd_demangle(abfd,name,0);
-    if (retval==0) {
-        /* make our own copy */
-        return strdup(name);
-    }
-    /* either way, we return a newly malloc'd COPY */
-    return retval;
+    section_t* savesection=malloc(sizeof(section_t));
+
+    savesection->name=name;
+    savesection->vma_start=vma_start;
+    savesection->length=length;
+    savesection->alignment=alignment;
+    savesection->flags=flags;
+    savesection->contents=contents;
+
+    (*H)->sections=realloc((*H)->sections,sizeof(section_t*)*((*H)->section_count+1));
+    (*H)->sections[(*H)->section_count]=savesection;
+    (*H)->section_count++;
+    return 0;
 }
 
-static void elf_load_sections(emma_handle* handle,bfd* abfd)
+static int create_symbol(emma_handle* H,
+        const char* name,
+        unsigned long value,
+        unsigned long flags,
+        unsigned long symtype)
 {
-    /* I couldn't determine a clean method to use bfd_map_over... */
-    /* load the sections, follow the linked list built by bfd */
-    struct bfd_section* sec=abfd->sections;
+    symbol_t* savesymbol=malloc(sizeof(symbol_t));
 
-    (*handle)->sections=0;
-    (*handle)->sections_num=0;
+    savesymbol->name=demangle(name);
+    savesymbol->value=value;
+    savesymbol->flags=flags;
+    savesymbol->type=symtype;;
 
-    while (sec) {
-        section_t* savesection=malloc(sizeof(section_t));
-
-        savesection->name=sec->name;
-        savesection->vma_start=sec->vma;
-        savesection->length=sec->size;
-        savesection->alignment=sec->alignment_power;
-        /* TODO determine flags used */
-        savesection->flags=sec->flags;
-        savesection->contents=NULL;
-
-        unsigned long int datasize=bfd_get_section_size(sec);
-        if (datasize) {
-            bfd_malloc_and_get_section(abfd,sec,&(savesection->contents));
-        }
-
-        (*handle)->sections=realloc((*handle)->sections,sizeof(section_t*)*((*handle)->sections_num+1));
-        (*handle)->sections[(*handle)->sections_num]=savesection;
-        (*handle)->sections_num++;
-
-        sec=sec->next;
-    }
-}
-static void elf_load_symbols(emma_handle* handle,bfd* abfd)
-{
-    /* ask how big storage for symbols needs to be */
-    long int datasize=bfd_get_symtab_upper_bound(abfd);
-    /* negative return value indicates no symbols */
-
-    (*handle)->symbols=0;
-    (*handle)->symbols_num=0;
-
-    if (datasize>0) {
-        /* allocate memory to hold symbols */
-        asymbol** symtable=malloc(datasize);
-
-        if (!symtable) {
-            /* couldn't allocate memory? very odd */
-            EXITERROR("Error allocating memory for symtable");
-        }
-
-        long numsymbols=bfd_canonicalize_symtab(abfd,symtable);
-        if (numsymbols<0) {
-            EXITERROR("Error while canonicalizing symbols");
-        }
-
-        /* process regular symbols */
-        for (long i=0; i<numsymbols; i++) {
-            symbol_t* sym=malloc(sizeof(symbol_t));
-
-            sym->name=emma_demangle(abfd,symtable[i]->name);
-            sym->value=symtable[i]->value;
-            sym->flags=symtable[i]->flags;
-            sym->type=bfd_decode_symclass(symtable[i]);
-
-            (*handle)->symbols=realloc((*handle)->symbols,sizeof(symbol_t*)*((*handle)->symbols_num+1));
-            (*handle)->symbols[(*handle)->symbols_num]=sym;
-            (*handle)->symbols_num++;
-        }
-        free(symtable);
-    }
-
-    long int dyndatasize=bfd_get_dynamic_symtab_upper_bound(abfd);
-    /* negative return value indicates no symbols */
-
-    if (dyndatasize>0) {
-        /* allocate memory to hold symbols */
-        asymbol** dynsymtable=malloc(dyndatasize);
-
-        if (!dynsymtable) {
-            /* couldn't allocate memory? very odd */
-            EXITERROR("Error allocating memory for dynamic symtable");
-        }
-
-        long dynnumsymbols=bfd_canonicalize_dynamic_symtab(abfd,dynsymtable);
-        if (dynnumsymbols<0) {
-            EXITERROR("Error while canonicalizing dynamic symbols");
-        }
-        /* process dynamic symbols */
-        for (long i=0; i<dynnumsymbols; i++) {
-            symbol_t* dynsym=malloc(sizeof(symbol_t));
-
-            dynsym->name=emma_demangle(abfd,dynsymtable[i]->name);
-            dynsym->value=dynsymtable[i]->value;
-            dynsym->flags=dynsymtable[i]->flags;
-            dynsym->type=bfd_decode_symclass(dynsymtable[i]);
-
-            (*handle)->symbols=realloc((*handle)->symbols,sizeof(symbol_t*)*((*handle)->symbols_num+1));
-            (*handle)->symbols[(*handle)->symbols_num]=dynsym;
-            (*handle)->symbols_num++;
-        }
-        free(dynsymtable);
-    }
+    (*H)->symbols=realloc((*H)->symbols,sizeof(symbol_t*)*((*H)->symbol_count+1));
+    (*H)->symbols[(*H)->symbol_count]=savesymbol;
+    (*H)->symbol_count++;
+    return 0;
 }

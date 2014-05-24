@@ -3,6 +3,8 @@
 #ifndef emma_H
 #define emma_H
 
+#define _GNU_SOURCE
+
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>

@@ -1,4 +1,4 @@
-/* disassem.c */
+/* dis_x86.c */
 
 /*
  * disassembler... someday
@@ -8,18 +8,19 @@
 
 #include "emma.h"
 #include "parsefile.h"
-#include "disassem.h"
+#include "dis_x86.h"
 
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
 
-void disassemble(emma_handle* handle,emma_section_t* section)
+void dis_x86(emma_handle* H,section_t* section)
 {
     unsigned long addr=0;
     unsigned long offset=section->vma_start;
     unsigned long maxaddr=section->length;
-    unsigned char* content=section->contents;
+    char* content=section->contents;
+    /* unsigned int bits=(*H)->mach; */
 
     while (addr<maxaddr) {
         char addrline[15+1],hexline[31+1],mnemline[81],cmntline[81],tmpline[81];
