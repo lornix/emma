@@ -19,18 +19,27 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-static int create_section(emma_handle* H,
-        const char* name,
-        unsigned long vma_start,
-        size_t length,
-        unsigned int alignment,
-        unsigned long flags,
-        char* contents);
 static int create_symbol(emma_handle* H,
         const char* name,
         unsigned long value,
         unsigned long flags,
-        unsigned long symtype);
+        unsigned long type);
+static int create_section(emma_handle* H,
+        const char* name,
+        size_t vma_start,
+        size_t length,
+        unsigned int alignment,
+        unsigned long flags,
+        const char* contents);
+static int create_segment(emma_handle* H,
+        unsigned int type,
+        unsigned int flags,
+        uint64_t offset,
+        uint64_t vaddr,
+        uint64_t paddr,
+        size_t sizefile,
+        size_t sizemem,
+        uint64_t alignment);
 
 static char* demangle(const char* name)
 {
@@ -38,7 +47,7 @@ static char* demangle(const char* name)
     return strdup(name);
 }
 
-char* estr(int value)
+const char* estr(int value)
 {
     switch(value) {
         case ENDIAN_LITTLE: return "LE";
@@ -90,24 +99,29 @@ uint64_t make_little_endian_quad(emma_handle* H,uint64_t value)
 static void parse_elf_header(emma_handle* H)
 {
     Elf64_Ehdr elf;
-    char* mm=(*H)->memmap;
+    const char* mm=(*H)->memmap;
 
     /* check ELF version */
     if (mm[EI_VERSION]!=EV_CURRENT) {
         /* TODO:perhaps a 'problem' entry? */
-        fprintf(stderr,"WARN: Elf Header EI_VERSION!=EV_CURRENT (=0x%02x)\n",mm[EI_VERSION]);
+        fprintf(stderr,"WARN: Elf Header EI_VERSION (%d) != EV_CURRENT (%d)\n",
+                mm[EI_VERSION],
+                EV_CURRENT);
     }
 
     /* check ABI in use, or zero value */
     if ((mm[EI_OSABI]!=ELFOSABI_GNU)&&(mm[EI_OSABI]!=0)) {
         /* TODO:perhaps a 'problem' entry? */
-        fprintf(stderr,"WARN: Elf Header EI_OSABI!=ELFOSABI_GNU (=0x%02x)\n",mm[EI_OSABI]);
+        fprintf(stderr,"WARN: Elf Header EI_OSABI (%d) != ELFOSABI_GNU (%d)\n",
+                mm[EI_OSABI],
+                ELFOSABI_GNU);
     }
 
     /* Check value of EI_ABIVERSION, should be zero */
     if (mm[EI_ABIVERSION]!=0) {
         /* TODO:perhaps a 'problem' entry? */
-        fprintf(stderr,"INFO: Elf Header EI_ABIVERSION!=0x00 (=0x%02x)\n",mm[EI_ABIVERSION]);
+        fprintf(stderr,"INFO: Elf Header EI_ABIVERSION (%d) != 0x00\n",
+                mm[EI_ABIVERSION]);
     }
 
     /* remember the padding? It should be all zeros, but I'm curious */
@@ -139,16 +153,16 @@ static void parse_elf_header(emma_handle* H)
 
     /* 32 bit? 64 bit? unknown? */
     /* a default to catch issues */
-    (*H)->bits=0;
+    (*H)->elf_class=0;
     if (mm[EI_CLASS]==ELFCLASS32) {
-        (*H)->bits=BITS_32;
+        (*H)->elf_class=BITS_32;
     } else if (mm[EI_CLASS]==ELFCLASS64) {
-        (*H)->bits=BITS_64;
+        (*H)->elf_class=BITS_64;
     }
 
-    assert(((*H)->bits==BITS_32)||((*H)->bits==BITS_64));
+    assert(((*H)->elf_class==BITS_32)||((*H)->elf_class==BITS_64));
 
-    if ((*H)->bits==BITS_32) {
+    if ((*H)->elf_class==BITS_32) {
         /* handle 32 bit header */
         Elf32_Ehdr* elf32=(Elf32_Ehdr*)mm;
         elf.e_type      = make_little_endian_word(H,elf32->e_type);
@@ -181,6 +195,25 @@ static void parse_elf_header(emma_handle* H)
         elf.e_shnum     = make_little_endian_word(H,elf64->e_shnum);
         elf.e_shstrndx  = make_little_endian_word(H,elf64->e_shstrndx);
     }
+    switch (elf.e_machine) {
+        /* very limited here, perhaps more later? */
+        case EM_386: /* 32 bit i386 */
+            (*H)->bits=BITS_32;
+            break;
+        case EM_X86_64: /* 64 bit x86_64 */
+            (*H)->bits=BITS_64;
+            break;
+        default: /* uh oh */
+            (*H)->bits=0;
+    }
+    /* elf bits match program bits? */
+    /* a difference would cause havoc in make_little_endian_* routines */
+    if ((*H)->bits!=(*H)->elf_class) {
+        /* TODO:perhaps a 'problem' entry? */
+        fprintf(stderr,"WARN: Elf Header elf_class (%s) != bits (%s)",
+                estr((*H)->elf_class),
+                estr((*H)->bits));
+    }
     switch (elf.e_type) {
         case ET_REL:
             (*H)->filetype=FT_RELOC; break;
@@ -193,27 +226,15 @@ static void parse_elf_header(emma_handle* H)
         default:
             (*H)->filetype=FT_RAW;
     }
-    switch (elf.e_machine) {
-        /* very limited here, perhaps more later? */
-        case EM_386: /* 32 bit i386 */
-            (*H)->bits=BITS_32;
-            (*H)->baseaddress=DEFAULT_BASE_32bits;
-            break;
-        case EM_X86_64: /* 64 bit x86_64 */
-            (*H)->bits=BITS_64;
-            (*H)->baseaddress=DEFAULT_BASE_64bits;
-            break;
-        default: /* uh oh */
-            (*H)->bits=0;
-            (*H)->baseaddress=0;
-    }
     if (elf.e_version!=EV_CURRENT) {
         /* TODO:perhaps a 'problem' entry? */
-        fprintf(stderr,"WARN: Elf Header e_version!=EV_CURRENT (=0x%02x)\n",elf.e_version);
+        fprintf(stderr,"WARN: Elf Header e_version (%d) != EV_CURRENT (%d)\n",
+                elf.e_version,
+                EV_CURRENT);
     }
     (*H)->startaddress=elf.e_entry;
-    (*H)->programheader=(char*)elf.e_phoff;
-    (*H)->sectionheader=(char*)elf.e_shoff;
+    (*H)->programheader=elf.e_phoff;
+    (*H)->sectionheader=elf.e_shoff;
     (*H)->elfflags=elf.e_flags;
     (*H)->elfheadersize=elf.e_ehsize;
     (*H)->phentsize=elf.e_phentsize;
@@ -224,10 +245,51 @@ static void parse_elf_header(emma_handle* H)
 }
 static void parse_program_header(emma_handle* H)
 {
-    char* mm=(*H)->memmap;
+    const char* mm=(*H)->memmap;
+
+    if ((*H)->bits==BITS_32) {
+        /* parse 32bit program header */
+        for (unsigned int i=0; i<(*H)->phnum; ++i) {
+            Elf32_Phdr* elf32=(void*)mm+(*H)->programheader+(i*(*H)->phentsize);
+            create_segment(H,
+                    make_little_endian_dword(H,elf32->p_type),
+                    make_little_endian_dword(H,elf32->p_flags),
+                    make_little_endian_dword(H,elf32->p_offset),
+                    make_little_endian_dword(H,elf32->p_vaddr),
+                    make_little_endian_dword(H,elf32->p_paddr),
+                    make_little_endian_dword(H,elf32->p_filesz),
+                    make_little_endian_dword(H,elf32->p_memsz),
+                    make_little_endian_dword(H,elf32->p_align));
+        }
+    } else {
+        /* parse 64bit program header */
+        for (unsigned int i=0; i<(*H)->phnum; ++i) {
+            Elf64_Phdr* elf64=(void*)mm+(*H)->programheader+(i*(*H)->phentsize);
+            create_segment(H,
+                    make_little_endian_dword(H,elf64->p_type),
+                    make_little_endian_dword(H,elf64->p_flags),
+                    make_little_endian_quad(H,elf64->p_offset),
+                    make_little_endian_quad(H,elf64->p_vaddr),
+                    make_little_endian_quad(H,elf64->p_paddr),
+                    make_little_endian_quad(H,elf64->p_filesz),
+                    make_little_endian_quad(H,elf64->p_memsz),
+                    make_little_endian_quad(H,elf64->p_align));
+        }
+    }
+    /* find segment contining entry point */
+    for (unsigned int i=0; i<emma_segment_count(H); ++i) {
+        segment_t* segment=emma_segment(H,i);
+        if ((segment->vaddr<=(*H)->startaddress)&&
+            ((*H)->startaddress<(segment->vaddr+segment->sizemem))&&
+            (segment->sizemem>0)) {
+            (*H)->baseaddress=segment->vaddr;
+            break;
+        }
+    }
 }
 static void parse_section_header(emma_handle* H)
 {
+    /* const char* mm=(*H)->memmap; */
     /*FIXME: shut up unused warning */ (*H)->bits=(*H)->bits;
 }
 
@@ -266,10 +328,10 @@ int emma_open(emma_handle* H,const char* fname)
         return 1;
     }
 
-    /* might be more we need to copy over */
+    /* might be more we need to copy over, but nothing stands out */
     (*H)->length=(size_t)stats.st_size;
 
-    char* mm=mmap(0x0,(*H)->length,PROT_READ,MAP_SHARED,(*H)->fd,0);
+    const char* mm=mmap(0x0,(*H)->length,PROT_READ,MAP_SHARED,(*H)->fd,0);
     if (mm==MAP_FAILED) {
         close((*H)->fd);
         return 1;
@@ -279,12 +341,14 @@ int emma_open(emma_handle* H,const char* fname)
 
     if (memcmp(mm,ELFMAG,SELFMAG)!=0) {
         /* not an ELF file of any sort */
+        /* at some point, we'll handle PE/COFF/etc */
         /* we need to create a raw section to hold contents*/
         (*H)->filetype=FT_RAW;
         /* TODO: option to specify endianness */
         (*H)->endianness=ENDIAN_LITTLE;
         /* TODO: option to specify bit size */
         (*H)->bits=BITS_64;
+        (*H)->elf_class=BITS_64;
         /* TODO: option to specify base address */
         create_section(H,".raw_data",0x0,(*H)->length,0,0x0,mm);
         /* TODO: option to specify start address */
@@ -317,6 +381,25 @@ section_t* emma_section(emma_handle* H,unsigned int which)
     }
     return (*H)->sections[which];
 }
+unsigned int emma_segment_count(emma_handle* H)
+{
+    if ((H==0)||(*H==0)) {
+        /* don't deref 0 */
+        return 0;
+    }
+    return (*H)->segment_count;
+}
+segment_t* emma_segment(emma_handle* H,unsigned int which)
+{
+    if ((H==0)||(*H==0)) {
+        /* don't deref 0 */
+        return 0;
+    }
+    if (which>=(*H)->segment_count) {
+        return 0;
+    }
+    return (*H)->segments[which];
+}
 unsigned int emma_symbol_count(emma_handle* H)
 {
     if ((H==0)||(*H==0)) {
@@ -345,7 +428,7 @@ int emma_close(emma_handle* H)
     }
 
     /* release mmapping */
-    munmap((*H)->memmap,(*H)->length);
+    munmap((void*)(*H)->memmap,(*H)->length);
 
     /* all done, close file */
     close((*H)->fd);
@@ -368,19 +451,49 @@ int emma_close(emma_handle* H)
         free((*H)->symbols);
         (*H)->symbol_count=0;
     }
-    free((*H)->filename);
+    free((void*)(*H)->filename);
     free(*H);
     *H=0;
     return 0;
 }
 
+static int create_symbol(emma_handle* H,
+        const char* name,
+        unsigned long value,
+        unsigned long flags,
+        unsigned long symtype)
+{
+    if ((H==0)||(*H==0)) {
+        /* don't deref 0 */
+        return 1;
+    }
+    symbol_t* savesymbol=malloc(sizeof(symbol_t));
+    if (savesymbol==0) {
+        /* malloc failed?!? */
+        return 1;
+    }
+
+    savesymbol->name=demangle(name);
+    savesymbol->value=value;
+    savesymbol->flags=flags;
+    savesymbol->type=symtype;
+
+    (*H)->symbols=realloc((*H)->symbols,sizeof(symbol_t*)*((*H)->symbol_count+1));
+    if ((*H)->symbols==0) {
+        /* realloc failed?!? */
+        return 1;
+    }
+    (*H)->symbols[(*H)->symbol_count]=savesymbol;
+    (*H)->symbol_count++;
+    return 0;
+}
 static int create_section(emma_handle* H,
         const char* name,
-        unsigned long vma_start,
+        size_t vma_start,
         size_t length,
         unsigned int alignment,
         unsigned long flags,
-        char* contents)
+        const char* contents)
 {
     if ((H==0)||(*H==0)) {
         /* don't deref 0 */
@@ -408,34 +521,41 @@ static int create_section(emma_handle* H,
     (*H)->section_count++;
     return 0;
 }
-
-static int create_symbol(emma_handle* H,
-        const char* name,
-        unsigned long value,
-        unsigned long flags,
-        unsigned long symtype)
+static int create_segment(emma_handle* H,
+        unsigned int type,
+        unsigned int flags,
+        uint64_t offset,
+        uint64_t vaddr,
+        uint64_t paddr,
+        size_t sizefile,
+        size_t sizemem,
+        uint64_t alignment)
 {
     if ((H==0)||(*H==0)) {
         /* don't deref 0 */
         return 1;
     }
-    symbol_t* savesymbol=malloc(sizeof(symbol_t));
-    if (savesymbol==0) {
+    segment_t* savesegment=malloc(sizeof(segment_t));
+    if (savesegment==0) {
         /* malloc failed?!? */
         return 1;
     }
 
-    savesymbol->name=demangle(name);
-    savesymbol->value=value;
-    savesymbol->flags=flags;
-    savesymbol->type=symtype;;
+    savesegment->type=type;
+    savesegment->flags=flags;
+    savesegment->offset=offset;
+    savesegment->vaddr=vaddr;
+    savesegment->paddr=paddr;
+    savesegment->sizefile=sizefile;
+    savesegment->sizemem=sizemem;
+    savesegment->alignment=alignment;
 
-    (*H)->symbols=realloc((*H)->symbols,sizeof(symbol_t*)*((*H)->symbol_count+1));
-    if ((*H)->symbols==0) {
+    (*H)->segments=realloc((*H)->segments,sizeof(segment_t*)*((*H)->segment_count+1));
+    if ((*H)->segments==0) {
         /* realloc failed?!? */
         return 1;
     }
-    (*H)->symbols[(*H)->symbol_count]=savesymbol;
-    (*H)->symbol_count++;
+    (*H)->segments[(*H)->segment_count]=savesegment;
+    (*H)->segment_count++;
     return 0;
 }

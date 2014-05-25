@@ -20,7 +20,7 @@ void dis_x86(emma_handle* H,section_t* section)
     unsigned long addr=0;
     unsigned long offset=section->vma_start;
     unsigned long maxaddr=section->length;
-    char* content=section->contents;
+    const char* content=section->contents;
     /*FIXME: shut up unused warning */ (*H)->bits=(*H)->bits;
 
     while (addr<maxaddr) {

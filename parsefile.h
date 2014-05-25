@@ -14,8 +14,8 @@
 /* for uint??_t defines */
 #include <stdint.h>
 
-enum {
-    ZERO_FILLER=0,
+typedef enum estr_enum {
+    ZERO_NOT_VALID=0,
     ENDIAN_LITTLE,
     ENDIAN_BIG,
     BITS_32,
@@ -25,19 +25,7 @@ enum {
     FT_EXEC,
     FT_DYNLIB,
     FT_CORE,
-};
-
-static const uint64_t DEFAULT_BASE_32bits __attribute__((used)) =0x8048000;
-static const uint64_t DEFAULT_BASE_64bits __attribute__((used)) =0x0400000;
-
-typedef struct section_t {
-    const char* name;
-    unsigned long vma_start;
-    size_t length;
-    unsigned int alignment; /* chaotic evil? */
-    unsigned long flags;
-    char* contents;
-} section_t;
+} estr_enum;
 
 typedef struct symbol_t {
     const    char* name;
@@ -46,29 +34,52 @@ typedef struct symbol_t {
     unsigned long  type;
 } symbol_t;
 
+typedef struct section_t {
+    const    char* name;
+    size_t   vma_start;
+    size_t   length;
+    unsigned int   alignment; /* chaotic evil? */
+    unsigned long  flags;
+    const    char* contents;
+} section_t;
+
+typedef struct segment_t {
+    unsigned int type;
+    unsigned int flags;
+    uint64_t offset;
+    uint64_t vaddr;
+    uint64_t paddr;
+    size_t   sizefile;
+    size_t   sizemem;
+    uint64_t alignment;
+} segment_t;
+
 typedef struct {
     int fd;
-    char* filename;
-    char* memmap;
-    int bits;
-    int filetype;
+    const char* filename;
+    const char* memmap;
+    estr_enum elf_class;
+    estr_enum bits;
+    estr_enum filetype;
+    estr_enum endianness;
     uint64_t baseaddress;
     uint64_t startaddress;
     size_t length;
-    unsigned int section_count;
     section_t** sections;
-    unsigned int symbol_count;
+    unsigned int section_count;
     symbol_t** symbols;
-    int endianness;
-    char* programheader;
-    char* sectionheader;
-    unsigned long elfflags;
-    unsigned long elfheadersize;
-    unsigned long phentsize;
-    unsigned long phnum;
-    unsigned long shentsize;
-    unsigned long shnum;
-    unsigned long strindex;
+    unsigned int symbol_count;
+    segment_t** segments;
+    unsigned int segment_count;
+    uint64_t programheader;
+    uint64_t sectionheader;
+    unsigned int elfflags;
+    unsigned int elfheadersize;
+    unsigned int phentsize;
+    unsigned int phnum;
+    unsigned int shentsize;
+    unsigned int shnum;
+    unsigned int strindex;
 } struct_t;
 
 typedef struct_t* emma_handle;
@@ -76,10 +87,12 @@ typedef struct_t* emma_handle;
 emma_handle emma_init();
 int emma_open(emma_handle* H,const char* fname);
 int emma_close(emma_handle* H);
-unsigned int emma_section_count(emma_handle* H);
 unsigned int emma_symbol_count(emma_handle* H);
-section_t* emma_section(emma_handle* H,unsigned int which);
+unsigned int emma_section_count(emma_handle* H);
+unsigned int emma_segment_count(emma_handle* H);
 symbol_t* emma_symbol(emma_handle* H,unsigned int which);
-char* estr(int value);
+section_t* emma_section(emma_handle* H,unsigned int which);
+segment_t* emma_segment(emma_handle* H,unsigned int which);
+const char* estr(int value);
 
 #endif
