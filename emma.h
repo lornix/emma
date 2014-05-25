@@ -31,8 +31,4 @@
             exit(1); \
         } while (0)
 
-typedef struct {
-    const char* filename;
-} emmadat;
-
 #endif

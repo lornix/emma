@@ -33,6 +33,7 @@ int main(int argc,const char* argv[])
     printf("Base Addr:  0x%lx\n",H->baseaddress);
     printf("Start Addr: 0x%lx\n",H->startaddress);
     printf("Length: %'ld bytes\n",H->length);
+    printf("\n");
 
     if (emma_segment_count(&H)>0) {
         printf("Segments (%d)\n",emma_segment_count(&H));
@@ -53,25 +54,38 @@ int main(int argc,const char* argv[])
             printf(" %8lx",segment->alignment);
             printf("\n");
         }
+        printf("\n");
     }
 
     if (emma_section_count(&H)>0) {
         printf("Sections (%d)\n",emma_section_count(&H));
-        for (unsigned int j=0; j<emma_section_count(&H); ++j) {
-            section_t* section=emma_section(&H,j);
-            printf("0x%08lx ",section->vma_start);
-            printf("%8lx ",section->length);
-            printf("%2d ",1<<(section->alignment));
-            printf("%08lx [",section->flags);
-            for (unsigned int k=0; k<8; ++k) {
-                if (k<section->length) {
-                    printf("%02x",*(section->contents+k)&0xff);
-                } else {
-                    printf("  ");
+        for (unsigned int show=0; show<2; ++show) {
+            for (unsigned int j=0; j<emma_section_count(&H); ++j) {
+                section_t* section=emma_section(&H,j);
+                printf("%3d) ",j);
+                printf("0x%08lx ",section->addr);
+                printf("%08lxo ",section->offset);
+                printf("%8lxs ",section->size);
+                printf("%8xl ",section->link);
+                printf("%08lxf [",section->flags);
+                for (unsigned int k=0; k<8; ++k) {
+                    if (k<section->size) {
+                        printf("%02x",*(H->memmap+section->offset+k)&0xff);
+                    } else {
+                        printf("  ");
+                    }
+                }
+                printf("]");
+                if(section->name!=0) {
+                    /* printf(" %s",(H->memmap+section->name)); */
+                    printf(" %8lx",section->name);
+                }
+                printf("\n");
+                if (show) {
+                    dis_x86(&H,section);
                 }
             }
-            printf("] %s\n",section->name);
-            dis_x86(&H,section);
+            printf("\n");
         }
     }
 

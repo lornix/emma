@@ -44,7 +44,7 @@ VERREV=$(VERSION)-$(REVISION)
 #
 CFLAGS+=-D'VERREV="$(VERREV)"'
 #
-.PHONY: all clean all-clean kcov kcov-clean kcov-show test test-clean
+.PHONY: all clean all-clean kcov kcov-clean kcov-show testprogs testprogs-clean
 
 all: emma
 
@@ -60,7 +60,7 @@ emma: $(OBJS)
 clean:
 	rm -f emma $(OBJS)
 
-kcov: all
+kcov: all testprogs
 	@rm -f /tmp/empty-file-$(VERSION) /tmp/unreadable-file-$(VERSION) /tmp/non-existent-file-$(VERSION)
 	@touch /tmp/empty-file-$(VERSION) /tmp/unreadable-file-$(VERSION)
 	@chmod 000 /tmp/unreadable-file-$(VERSION)
@@ -70,6 +70,9 @@ kcov: all
 	-kcov --skip-solibs kcov/ ./emma /tmp/non-existent-file-$(VERSION)
 	-kcov --skip-solibs kcov/ ./emma emma
 	-kcov --skip-solibs kcov/ ./emma test/hello_cpp
+	-kcov --skip-solibs kcov/ ./emma test/asm_hello
+	-kcov --skip-solibs kcov/ ./emma test/asm_hello32
+	-kcov --skip-solibs kcov/ ./emma Makefile
 	@rm -f /tmp/empty-file-$(VERSION) /tmp/unreadable-file-$(VERSION) /tmp/non-existent-file-$(VERSION)
 	@kcov --report-only kcov/ ./emma
 
@@ -79,10 +82,10 @@ kcov-show:
 kcov-clean:
 	rm -rf kcov
 
-test:
+testprogs:
 	$(MAKE) -C test
 
-test-clean:
+testprogs-clean:
 	$(MAKE) -C test clean
 
-all-clean: clean kcov-clean test-clean
+all-clean: clean kcov-clean testprogs-clean

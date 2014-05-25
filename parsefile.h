@@ -35,12 +35,16 @@ typedef struct symbol_t {
 } symbol_t;
 
 typedef struct section_t {
-    const    char* name;
-    size_t   vma_start;
-    size_t   length;
-    unsigned int   alignment; /* chaotic evil? */
-    unsigned long  flags;
-    const    char* contents;
+    size_t name;
+    unsigned int type;
+    uint64_t flags;
+    size_t addr;
+    size_t offset;
+    size_t size;
+    unsigned int link;
+    unsigned int info;
+    uint64_t align;
+    uint64_t entsize;
 } section_t;
 
 typedef struct segment_t {

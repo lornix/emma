@@ -25,12 +25,16 @@ static int create_symbol(emma_handle* H,
         unsigned long flags,
         unsigned long type);
 static int create_section(emma_handle* H,
-        const char* name,
-        size_t vma_start,
-        size_t length,
-        unsigned int alignment,
-        unsigned long flags,
-        const char* contents);
+        size_t name,
+        unsigned int type,
+        uint64_t flags,
+        size_t addr,
+        size_t offset,
+        size_t size,
+        unsigned int link,
+        unsigned int info,
+        uint64_t align,
+        uint64_t entsize);
 static int create_segment(emma_handle* H,
         unsigned int type,
         unsigned int flags,
@@ -210,7 +214,7 @@ static void parse_elf_header(emma_handle* H)
     /* a difference would cause havoc in make_little_endian_* routines */
     if ((*H)->bits!=(*H)->elf_class) {
         /* TODO:perhaps a 'problem' entry? */
-        fprintf(stderr,"WARN: Elf Header elf_class (%s) != bits (%s)",
+        fprintf(stderr,"WARN: Elf Header elf_class (%s) != bits (%s)\n",
                 estr((*H)->elf_class),
                 estr((*H)->bits));
     }
@@ -245,12 +249,15 @@ static void parse_elf_header(emma_handle* H)
 }
 static void parse_program_header(emma_handle* H)
 {
-    const char* mm=(*H)->memmap;
+    if ((*H)->programheader==0) {
+        /* well, that was easy... no program header! */
+        return;
+    }
 
     if ((*H)->bits==BITS_32) {
         /* parse 32bit program header */
         for (unsigned int i=0; i<(*H)->phnum; ++i) {
-            Elf32_Phdr* elf32=(void*)mm+(*H)->programheader+(i*(*H)->phentsize);
+            Elf32_Phdr* elf32=(void*)(*H)->memmap+(*H)->programheader+(i*(*H)->phentsize);
             create_segment(H,
                     make_little_endian_dword(H,elf32->p_type),
                     make_little_endian_dword(H,elf32->p_flags),
@@ -264,7 +271,7 @@ static void parse_program_header(emma_handle* H)
     } else {
         /* parse 64bit program header */
         for (unsigned int i=0; i<(*H)->phnum; ++i) {
-            Elf64_Phdr* elf64=(void*)mm+(*H)->programheader+(i*(*H)->phentsize);
+            Elf64_Phdr* elf64=(void*)(*H)->memmap+(*H)->programheader+(i*(*H)->phentsize);
             create_segment(H,
                     make_little_endian_dword(H,elf64->p_type),
                     make_little_endian_dword(H,elf64->p_flags),
@@ -276,7 +283,7 @@ static void parse_program_header(emma_handle* H)
                     make_little_endian_quad(H,elf64->p_align));
         }
     }
-    /* find segment contining entry point */
+    /* find segment containing entry point */
     for (unsigned int i=0; i<emma_segment_count(H); ++i) {
         segment_t* segment=emma_segment(H,i);
         if ((segment->vaddr<=(*H)->startaddress)&&
@@ -289,8 +296,44 @@ static void parse_program_header(emma_handle* H)
 }
 static void parse_section_header(emma_handle* H)
 {
-    /* const char* mm=(*H)->memmap; */
-    /*FIXME: shut up unused warning */ (*H)->bits=(*H)->bits;
+    if ((*H)->sectionheader==0) {
+        /* well, that was easy... no section header! */
+        return;
+    }
+
+    if ((*H)->bits==BITS_32) {
+        /* parse 32bit section header */
+        for (unsigned int i=0; i<(*H)->shnum; ++i) {
+            Elf32_Shdr* elf32=(void*)(*H)->memmap+(*H)->sectionheader+(i*(*H)->shentsize);
+            create_section(H,
+                    make_little_endian_dword(H,elf32->sh_name),
+                    make_little_endian_dword(H,elf32->sh_type),
+                    make_little_endian_dword(H,elf32->sh_flags),
+                    make_little_endian_dword(H,elf32->sh_addr),
+                    make_little_endian_dword(H,elf32->sh_offset),
+                    make_little_endian_dword(H,elf32->sh_size),
+                    make_little_endian_dword(H,elf32->sh_link),
+                    make_little_endian_dword(H,elf32->sh_info),
+                    make_little_endian_dword(H,elf32->sh_addralign),
+                    make_little_endian_dword(H,elf32->sh_entsize));
+        }
+    } else {
+        /* parse 64bit program header */
+        for (unsigned int i=0; i<(*H)->shnum; ++i) {
+            Elf64_Shdr* elf64=(void*)(*H)->memmap+(*H)->sectionheader+(i*(*H)->shentsize);
+            create_section(H,
+                    make_little_endian_dword(H,elf64->sh_name),
+                    make_little_endian_dword(H,elf64->sh_type),
+                    make_little_endian_quad(H,elf64->sh_flags),
+                    make_little_endian_quad(H,elf64->sh_addr),
+                    make_little_endian_quad(H,elf64->sh_offset),
+                    make_little_endian_quad(H,elf64->sh_size),
+                    make_little_endian_dword(H,elf64->sh_link),
+                    make_little_endian_dword(H,elf64->sh_info),
+                    make_little_endian_quad(H,elf64->sh_addralign),
+                    make_little_endian_quad(H,elf64->sh_entsize));
+        }
+    }
 }
 
 emma_handle emma_init()
@@ -350,15 +393,18 @@ int emma_open(emma_handle* H,const char* fname)
         (*H)->bits=BITS_64;
         (*H)->elf_class=BITS_64;
         /* TODO: option to specify base address */
-        create_section(H,".raw_data",0x0,(*H)->length,0,0x0,mm);
+        create_section(H,0x0,0,0,0x0,0x0,(*H)->length,0,0,1,0);
         /* TODO: option to specify start address */
-        create_symbol(H, "_start",0x0,0x0,0x0);
+        create_symbol(H, "_start.dummy",0x0,0x0,0x0);
         return 0;
     }
 
     parse_elf_header(H);
     parse_program_header(H);
     parse_section_header(H);
+
+    create_section(H,0x0,0,0,(*H)->baseaddress,0x0,(*H)->length,0,0,1,0);
+    create_symbol(H, "_start.dummy",(*H)->startaddress,0x0,0x0);
 
     return 0;
 }
@@ -434,14 +480,6 @@ int emma_close(emma_handle* H)
     close((*H)->fd);
 
     /* all done, clean up */
-    if ((*H)->section_count>0) {
-        /* empty the section array */
-        for (unsigned int i=0; i<(*H)->section_count; ++i) {
-            free((*H)->sections[i]);
-        }
-        free((*H)->sections);
-        (*H)->section_count=0;
-    }
     if ((*H)->symbol_count>0) {
         /* empty the symbols vector */
         for (unsigned int i=0; i<(*H)->symbol_count; ++i) {
@@ -450,6 +488,22 @@ int emma_close(emma_handle* H)
         }
         free((*H)->symbols);
         (*H)->symbol_count=0;
+    }
+    if ((*H)->section_count>0) {
+        /* empty the section array */
+        for (unsigned int i=0; i<(*H)->section_count; ++i) {
+            free((*H)->sections[i]);
+        }
+        free((*H)->sections);
+        (*H)->section_count=0;
+    }
+    if ((*H)->segment_count>0) {
+        /* empty the segment array */
+        for (unsigned int i=0; i<(*H)->segment_count; ++i) {
+            free((*H)->segments[i]);
+        }
+        free((*H)->segments);
+        (*H)->segment_count=0;
     }
     free((void*)(*H)->filename);
     free(*H);
@@ -488,12 +542,16 @@ static int create_symbol(emma_handle* H,
     return 0;
 }
 static int create_section(emma_handle* H,
-        const char* name,
-        size_t vma_start,
-        size_t length,
-        unsigned int alignment,
-        unsigned long flags,
-        const char* contents)
+        size_t name,
+        unsigned int type,
+        uint64_t flags,
+        size_t addr,
+        size_t offset,
+        size_t size,
+        unsigned int link,
+        unsigned int info,
+        uint64_t align,
+        uint64_t entsize)
 {
     if ((H==0)||(*H==0)) {
         /* don't deref 0 */
@@ -506,11 +564,15 @@ static int create_section(emma_handle* H,
     }
 
     savesection->name=name;
-    savesection->vma_start=vma_start;
-    savesection->length=length;
-    savesection->alignment=alignment;
+    savesection->type=type;
     savesection->flags=flags;
-    savesection->contents=contents;
+    savesection->addr=addr;
+    savesection->offset=offset;
+    savesection->size=size;
+    savesection->link=link;
+    savesection->info=info;
+    savesection->align=align;
+    savesection->entsize=entsize;
 
     (*H)->sections=realloc((*H)->sections,sizeof(section_t*)*((*H)->section_count+1));
     if ((*H)->sections==0) {
