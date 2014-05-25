@@ -11,33 +11,32 @@
 
 #include "emma.h"
 
-#include <stdio.h>
+/* for uint??_t defines */
+#include <stdint.h>
 
-typedef enum {
-    LITEND=0,
-    BIGEND
-} endianness;
+enum {
+    ZERO_FILLER=0,
+    ENDIAN_LITTLE,
+    ENDIAN_BIG,
+    BITS_32,
+    BITS_64,
+    FT_RAW,
+    FT_RELOC,
+    FT_EXEC,
+    FT_DYNLIB,
+    FT_CORE,
+};
 
-typedef enum {
-    FILETYPE_UNKNOWN=0,
-    FILETYPE_RAW32,
-    FILETYPE_RAW64,
-    FILETYPE_ELF32,
-    FILETYPE_ELF64,
-    FILETYPE_LIB32,
-    FILETYPE_LIB64
-} filetype_t;
+static const uint64_t DEFAULT_BASE_32bits __attribute__((used)) =0x8048000;
+static const uint64_t DEFAULT_BASE_64bits __attribute__((used)) =0x0400000;
 
 typedef struct section_t {
     const char* name;
     unsigned long vma_start;
-    unsigned long length;
+    size_t length;
     unsigned int alignment; /* chaotic evil? */
     unsigned long flags;
     char* contents;
-    // something to store REL relocations
-    // something to store RELA relocations
-    // line number info?
 } section_t;
 
 typedef struct symbol_t {
@@ -50,18 +49,26 @@ typedef struct symbol_t {
 typedef struct {
     int fd;
     char* filename;
-    char* mmap;
-    int arch;
-    int mach;
-    filetype_t filetype;
-    unsigned long baseaddress;
-    unsigned long startaddress;
-    unsigned long length;
+    char* memmap;
+    int bits;
+    int filetype;
+    uint64_t baseaddress;
+    uint64_t startaddress;
+    size_t length;
     unsigned int section_count;
     section_t** sections;
     unsigned int symbol_count;
     symbol_t** symbols;
-    endianness whichendian;
+    int endianness;
+    char* programheader;
+    char* sectionheader;
+    unsigned long elfflags;
+    unsigned long elfheadersize;
+    unsigned long phentsize;
+    unsigned long phnum;
+    unsigned long shentsize;
+    unsigned long shnum;
+    unsigned long strindex;
 } struct_t;
 
 typedef struct_t* emma_handle;
@@ -73,6 +80,6 @@ unsigned int emma_section_count(emma_handle* H);
 unsigned int emma_symbol_count(emma_handle* H);
 section_t* emma_section(emma_handle* H,unsigned int which);
 symbol_t* emma_symbol(emma_handle* H,unsigned int which);
-char* filetype_str(filetype_t filetype);
+char* estr(int value);
 
 #endif

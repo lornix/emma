@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
+#include <ctype.h>
 
 void dis_x86(emma_handle* H,section_t* section)
 {
@@ -20,7 +21,7 @@ void dis_x86(emma_handle* H,section_t* section)
     unsigned long offset=section->vma_start;
     unsigned long maxaddr=section->length;
     char* content=section->contents;
-    /* unsigned int bits=(*H)->mach; */
+    /*FIXME: shut up unused warning */ (*H)->bits=(*H)->bits;
 
     while (addr<maxaddr) {
         char addrline[15+1],hexline[31+1],mnemline[81],cmntline[81],tmpline[81];
@@ -252,6 +253,10 @@ void dis_x86(emma_handle* H,section_t* section)
                     break;
                 default:
                     snprintf(mnemline,80,".byte\t0x%02x",byte);
+                    if (isprint(byte)) {
+                        snprintf(tmpline,80,"\t# '%c'",byte);
+                        strncat(mnemline,tmpline,80);
+                    }
                     addr++;
                     instrlen=0;
             }

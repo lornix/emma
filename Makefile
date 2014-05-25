@@ -10,6 +10,7 @@ CFLAGS+=-g3
 #CFLAGS+=-gstabs3
 # yell out all warnings and whatnot
 CFLAGS+=-Wall -Wextra -Wunused
+CFLAGS+=-Wconversion
 # make all warnings into errors
 #CFLAGS+=-Werror
 # link time optimization! cool! smaller exec's!
@@ -27,7 +28,7 @@ CFLAGS+=-O0
 # das linker flags
 # LDFLAGS+=
 # LDFLAGS+=-lm
-LDFLAGS+=-lbfd
+# LDFLAGS+=-lbfd
 #
 CC:=gcc
 #

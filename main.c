@@ -26,15 +26,18 @@ int main(int argc,const char* argv[])
     }
     setlocale(LC_ALL,"");
     printf("File: %s\n",argv[arg]);
-    printf("File Type: %s\n",filetype_str(H->filetype));
+    printf("File Type: %s (%s %s)\n",
+            estr(H->filetype),
+            estr(H->bits),
+            estr(H->endianness));
     printf("Base Addr:  0x%lx\n",H->baseaddress);
     printf("Start Addr: 0x%lx\n",H->startaddress);
     printf("Length: %'ld bytes\n",H->length);
     if (emma_section_count(&H)>0) {
-        printf("%d sections\n",emma_section_count(&H));
+        printf("Sections (%d)\n",emma_section_count(&H));
         for (unsigned int j=0; j<emma_section_count(&H); ++j) {
             section_t* section=emma_section(&H,j);
-            printf("%8lx ",section->vma_start);
+            printf("0x%08lx ",section->vma_start);
             printf("%8lx ",section->length);
             printf("%2d ",1<<(section->alignment));
             printf("%08lx [",section->flags);
@@ -50,7 +53,14 @@ int main(int argc,const char* argv[])
         }
     }
     if (emma_symbol_count(&H)>0) {
-        printf("%d symbols\n",emma_symbol_count(&H));
+        printf("Symbols (%d)\n",emma_symbol_count(&H));
+        for (unsigned int j=0; j<emma_symbol_count(&H); ++j) {
+            symbol_t* symbol=emma_symbol(&H,j);
+            printf("0x%08lx ",symbol->value);
+            printf("%08lx ",symbol->flags);
+            printf("%08lx ",symbol->type);
+            printf("%s\n",symbol->name);
+        }
     }
     emma_close(&H);
 
