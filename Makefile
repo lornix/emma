@@ -28,9 +28,6 @@ CFLAGS+=-Wall -Wextra -Wunused -Wconversion
 #CFLAGS+=-flto
 #LDFLAGS+=-flto
 #
-# enable for code-coverage statistics (automated! see below!)
-#CFLAGS+=--coverage -ftest-coverage
-#
 # enable for gmon performance statistics
 #CFLAGS+=-pg
 #
@@ -76,7 +73,7 @@ clean:
 	rm -f gmon.out *.gcda *.gcov *.gcno
 
 coverage: clean testprogs
-	@CFLAGS="--coverage -ftest-coverage" $(MAKE) all
+	@CFLAGS="--coverage" $(MAKE) all
 	@# no file
 	-./$(BIN)
 	@# non-existent file
