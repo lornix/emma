@@ -12,8 +12,7 @@ CFLAGS+=-g3
 #CFLAGS+=-O
 #
 # or not!
-#CFLAGS+=-O0
-CFLAGS+=-O3
+CFLAGS+=-O0
 #
 # yell out all warnings and whatnot
 CFLAGS+=-Wall -Wextra -Wunused -Wconversion
@@ -114,7 +113,7 @@ testprogs-clean:
 allclean: clean testprogs-clean
 
 cov:
-	@ls *.gcda >/dev/null 2>&1 && gcov -a *.c | awk ' \
+	@ls *.gcda >/dev/null 2>&1 && gcov -r -a *.c | awk ' \
 		/^File/{ name=substr($$0, index($$0," ")); } \
 		/^Lines/{ if (name=="") { print "===" }; print substr($$0,1,index($$0,":")) " " substr($$0,index($$0,":")+1) name; name=""; } \
 		{ next }' || echo "Try 'make coverage' first"

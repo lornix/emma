@@ -339,14 +339,11 @@ static void parse_section_header(emma_handle* H)
 
 emma_handle emma_init(void)
 {
-    emma_handle H=malloc(sizeof(struct_t));
+    emma_handle H=calloc(1,sizeof(struct_t));
     if (H==0) {
-        /* malloc failed?!? */
+        /* calloc failed?!? */
         return 0;
     }
-
-    /* zero out structure by default */
-    memset(H,0,sizeof(struct_t));
 
     return H;
 }
@@ -511,7 +508,6 @@ int emma_close(emma_handle* H)
     *H=0;
     return 0;
 }
-
 static int create_symbol(emma_handle* H,
         const char* name,
         unsigned long value,
@@ -522,9 +518,9 @@ static int create_symbol(emma_handle* H,
         /* don't deref 0 */
         return 1;
     }
-    symbol_t* savesymbol=malloc(sizeof(symbol_t));
+    symbol_t* savesymbol=calloc(1,sizeof(symbol_t));
     if (savesymbol==0) {
-        /* malloc failed?!? */
+        /* calloc failed?!? */
         return 1;
     }
 
@@ -558,9 +554,9 @@ static int create_section(emma_handle* H,
         /* don't deref 0 */
         return 1;
     }
-    section_t* savesection=malloc(sizeof(section_t));
+    section_t* savesection=calloc(1,sizeof(section_t));
     if (savesection==0) {
-        /* malloc failed?!? */
+        /* calloc failed?!? */
         return 1;
     }
 
@@ -598,9 +594,9 @@ static int create_segment(emma_handle* H,
         /* don't deref 0 */
         return 1;
     }
-    segment_t* savesegment=malloc(sizeof(segment_t));
+    segment_t* savesegment=calloc(1,sizeof(segment_t));
     if (savesegment==0) {
-        /* malloc failed?!? */
+        /* calloc failed?!? */
         return 1;
     }
 
