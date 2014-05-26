@@ -34,7 +34,7 @@ int main(int argc,char* argv[])
              *  must be called in order to allow the
              *  control over the child process
              */
-            execl(argv[1],argv[1],*(argv+2),NULL);
+            execlp(argv[1],argv[1],*(argv+2),NULL);
             /*
              *  executes the program and causes
              *  the child to stop and send a signal

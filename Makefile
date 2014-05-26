@@ -12,10 +12,12 @@ CFLAGS+=-g3
 #CFLAGS+=-O
 #
 # or not!
-CFLAGS+=-O0
+#CFLAGS+=-O0
+CFLAGS+=-O3
 #
 # yell out all warnings and whatnot
 CFLAGS+=-Wall -Wextra -Wunused -Wconversion
+CFLAGS+=-Winline
 #
 # Want to REALLY be picky? uncomment two lines below
 #CFLAGS+=-Wreturn-local-addr -Wshadow -Wundef -Wwrite-strings -Wmissing-declarations -Wmissing-prototypes

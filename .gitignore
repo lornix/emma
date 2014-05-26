@@ -5,6 +5,7 @@ emma
 *.gcno
 test/asm_hello
 test/asm_hello32
+test/bit_counting
 test/countinstr
 test/environ
 test/hello_cpp
@@ -16,4 +17,3 @@ test/sqrt
 test/tracer1
 test/tst64
 test/tstalarm
-kcov/
