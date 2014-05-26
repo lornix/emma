@@ -67,7 +67,7 @@ const char* estr(int value)
     }
 }
 
-uint16_t make_little_endian_word(emma_handle* H,uint16_t value)
+inline uint16_t make_little_endian_word(emma_handle* H,uint16_t value)
 {
     if ((*H)->endianness==ENDIAN_BIG) {
         value=(uint16_t)(
@@ -76,7 +76,7 @@ uint16_t make_little_endian_word(emma_handle* H,uint16_t value)
     }
     return value;
 }
-uint32_t make_little_endian_dword(emma_handle* H,uint32_t value)
+inline uint32_t make_little_endian_dword(emma_handle* H,uint32_t value)
 {
     if ((*H)->endianness==ENDIAN_BIG) {
         value=((value&0xFF000000)>>24)|
@@ -86,7 +86,7 @@ uint32_t make_little_endian_dword(emma_handle* H,uint32_t value)
     }
     return value;
 }
-uint64_t make_little_endian_quad(emma_handle* H,uint64_t value)
+inline uint64_t make_little_endian_quad(emma_handle* H,uint64_t value)
 {
     if ((*H)->endianness==ENDIAN_BIG) {
         value=((value&0xFF00000000000000)>>56)|
@@ -284,11 +284,12 @@ static void parse_program_header(emma_handle* H)
         }
     }
     /* find segment containing entry point */
-    for (unsigned int i=0; i<emma_segment_count(H); ++i) {
-        segment_t* segment=emma_segment(H,i);
+    unsigned int segcount=(*H)->segment_count;
+    for (unsigned int i=0; i<segcount; ++i) {
+        segment_t* segment=(*H)->segments[i];
         if ((segment->vaddr<=(*H)->startaddress)&&
-            ((*H)->startaddress<(segment->vaddr+segment->sizemem))&&
-            (segment->sizemem>0)) {
+                ((*H)->startaddress<(segment->vaddr+segment->sizemem))&&
+                (segment->sizemem>0)) {
             (*H)->baseaddress=segment->vaddr;
             break;
         }
@@ -336,7 +337,7 @@ static void parse_section_header(emma_handle* H)
     }
 }
 
-emma_handle emma_init()
+emma_handle emma_init(void)
 {
     emma_handle H=malloc(sizeof(struct_t));
     if (H==0) {
@@ -416,7 +417,7 @@ unsigned int emma_section_count(emma_handle* H)
     }
     return (*H)->section_count;
 }
-section_t* emma_section(emma_handle* H,unsigned int which)
+section_t* emma_get_section(emma_handle* H,unsigned int which)
 {
     if ((H==0)||(*H==0)) {
         /* don't deref 0 */
@@ -435,7 +436,7 @@ unsigned int emma_segment_count(emma_handle* H)
     }
     return (*H)->segment_count;
 }
-segment_t* emma_segment(emma_handle* H,unsigned int which)
+segment_t* emma_get_segment(emma_handle* H,unsigned int which)
 {
     if ((H==0)||(*H==0)) {
         /* don't deref 0 */
@@ -455,7 +456,7 @@ unsigned int emma_symbol_count(emma_handle* H)
 
     return (*H)->symbol_count;
 }
-symbol_t* emma_symbol(emma_handle* H,unsigned int which)
+symbol_t* emma_get_symbol(emma_handle* H,unsigned int which)
 {
     if ((H==0)||(*H==0)) {
         /* don't deref 0 */

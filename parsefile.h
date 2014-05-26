@@ -36,15 +36,16 @@ typedef struct symbol_t {
 
 typedef struct section_t {
     size_t name;
-    unsigned int type;
-    uint64_t flags;
     size_t addr;
     size_t offset;
     size_t size;
-    unsigned int link;
-    unsigned int info;
+    uint64_t flags;
     uint64_t align;
     uint64_t entsize;
+    unsigned int type;
+    unsigned int link;
+    unsigned int info;
+    unsigned int padding;
 } section_t;
 
 typedef struct segment_t {
@@ -59,24 +60,20 @@ typedef struct segment_t {
 } segment_t;
 
 typedef struct {
-    int fd;
     const char* filename;
     const char* memmap;
-    estr_enum elf_class;
-    estr_enum bits;
-    estr_enum filetype;
-    estr_enum endianness;
     uint64_t baseaddress;
     uint64_t startaddress;
     size_t length;
     section_t** sections;
-    unsigned int section_count;
     symbol_t** symbols;
-    unsigned int symbol_count;
     segment_t** segments;
-    unsigned int segment_count;
     uint64_t programheader;
     uint64_t sectionheader;
+    int fd;
+    unsigned int section_count;
+    unsigned int symbol_count;
+    unsigned int segment_count;
     unsigned int elfflags;
     unsigned int elfheadersize;
     unsigned int phentsize;
@@ -84,19 +81,27 @@ typedef struct {
     unsigned int shentsize;
     unsigned int shnum;
     unsigned int strindex;
+    estr_enum elf_class;
+    estr_enum bits;
+    estr_enum filetype;
+    estr_enum endianness;
+    unsigned int padding;
 } struct_t;
 
 typedef struct_t* emma_handle;
 
-emma_handle emma_init();
+emma_handle emma_init(void);
 int emma_open(emma_handle* H,const char* fname);
 int emma_close(emma_handle* H);
 unsigned int emma_symbol_count(emma_handle* H);
 unsigned int emma_section_count(emma_handle* H);
 unsigned int emma_segment_count(emma_handle* H);
-symbol_t* emma_symbol(emma_handle* H,unsigned int which);
-section_t* emma_section(emma_handle* H,unsigned int which);
-segment_t* emma_segment(emma_handle* H,unsigned int which);
+symbol_t* emma_get_symbol(emma_handle* H,unsigned int which);
+section_t* emma_get_section(emma_handle* H,unsigned int which);
+segment_t* emma_get_segment(emma_handle* H,unsigned int which);
 const char* estr(int value);
+uint16_t make_little_endian_word(emma_handle* H,uint16_t value);
+uint32_t make_little_endian_dword(emma_handle* H,uint32_t value);
+uint64_t make_little_endian_quad(emma_handle* H,uint64_t value);
 
 #endif

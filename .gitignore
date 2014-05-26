@@ -1,5 +1,8 @@
 emma
 *.o
+*.gcov
+*.gcda
+*.gcno
 test/asm_hello
 test/asm_hello32
 test/countinstr

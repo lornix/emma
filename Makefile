@@ -4,26 +4,38 @@
 #
 # adhere to a higher standard!
 CFLAGS+=-std=c99
-#CFLAGS+=-std=c11
+#
 # pretty much always want debugging symbols included
 CFLAGS+=-g3
-#CFLAGS+=-gstabs3
+#
+# optimize!
+#CFLAGS+=-O
+#
+# or not!
+CFLAGS+=-O0
+#
 # yell out all warnings and whatnot
-CFLAGS+=-Wall -Wextra -Wunused
-CFLAGS+=-Wconversion
+CFLAGS+=-Wall -Wextra -Wunused -Wconversion
+#
+# Want to REALLY be picky? uncomment two lines below
+#CFLAGS+=-Wreturn-local-addr -Wshadow -Wundef -Wwrite-strings -Wmissing-declarations -Wmissing-prototypes
+#CFLAGS+=-Wdeprecated -Wdeprecated-declarations -Wpacked -Wpadded -Wunsuffixed-float-constants -Wdouble-promotion
+#
 # make all warnings into errors
 #CFLAGS+=-Werror
+#
 # link time optimization! cool! smaller exec's!
 #CFLAGS+=-flto
 #LDFLAGS+=-flto
-# optimize!
-#CFLAGS+=-O3
-# or not!
-CFLAGS+=-O0
+#
+# enable for code-coverage statistics (automated! see below!)
+#CFLAGS+=--coverage -ftest-coverage
+#
 # enable for gmon performance statistics
 #CFLAGS+=-pg
+#
 # preserve everything used to create binary, verbose assembly comments
-#CFLAGS+=-masm=intel --save-temps -fverbose-asm
+#CFLAGS+=--save-temps -fverbose-asm
 #
 # das linker flags
 # LDFLAGS+=
@@ -42,45 +54,57 @@ VERSION=$(shell cat VERSION)
 REVISION=$(shell git rev-parse --short HEAD)
 VERREV=$(VERSION)-$(REVISION)
 #
+BIN=emma
+#
 CFLAGS+=-D'VERREV="$(VERREV)"'
 #
-.PHONY: all clean all-clean kcov kcov-clean kcov-show testprogs testprogs-clean
+.PHONY: all clean allclean testprogs testprogs-clean coverage cov
 
-all: emma
+all: $(BIN)
 
 OBJS=$(addsuffix .o,$(basename $(wildcard *.c)))
 HDRS=$(wildcard *.h)
 
-emma: $(OBJS)
+$(BIN): $(OBJS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
 %.o : %.c $(HDRS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -c -o $@ $<
 
 clean:
-	rm -f emma $(OBJS)
+	rm -f $(BIN) $(OBJS)
+	rm -f gmon.out *.gcda *.gcov *.gcno
 
-kcov: all testprogs
-	@rm -f /tmp/empty-file-$(VERSION) /tmp/unreadable-file-$(VERSION) /tmp/non-existent-file-$(VERSION)
-	@touch /tmp/empty-file-$(VERSION) /tmp/unreadable-file-$(VERSION)
+coverage: clean testprogs
+	@CFLAGS="--coverage -ftest-coverage" $(MAKE) all
+	@# no file
+	-./$(BIN)
+	@# non-existent file
+	@rm -f /tmp/non-existent-file-$(VERSION)
+	-./$(BIN) /tmp/non-existent-file-$(VERSION)
+	@# empty file
+	@rm -f /tmp/empty-file-$(VERSION)
+	@touch /tmp/empty-file-$(VERSION)
+	-./$(BIN) /tmp/empty-file-$(VERSION)
+	@rm -f /tmp/empty-file-$(VERSION)
+	@# unreadable (empty) file
+	@touch /tmp/unreadable-file-$(VERSION)
 	@chmod 000 /tmp/unreadable-file-$(VERSION)
-	-kcov --skip-solibs kcov/ ./emma
-	-kcov --skip-solibs kcov/ ./emma /tmp/empty-file-$(VERSION)
-	-kcov --skip-solibs kcov/ ./emma /tmp/unreadable-file-$(VERSION)
-	-kcov --skip-solibs kcov/ ./emma /tmp/non-existent-file-$(VERSION)
-	-kcov --skip-solibs kcov/ ./emma emma
-	-kcov --skip-solibs kcov/ ./emma test/hello_cpp
-	-kcov --skip-solibs kcov/ ./emma test/asm_hello
-	-kcov --skip-solibs kcov/ ./emma test/asm_hello32
-	-kcov --skip-solibs kcov/ ./emma Makefile
-	@rm -f /tmp/empty-file-$(VERSION) /tmp/unreadable-file-$(VERSION) /tmp/non-existent-file-$(VERSION)
-	@kcov --report-only kcov/ ./emma
-
-kcov-show:
-	xdg-open kcov/index.html
-
-kcov-clean:
-	rm -rf kcov
+	-./$(BIN) /tmp/unreadable-file-$(VERSION)
+	@rm -f /tmp/unreadable-file-$(VERSION)
+	@# not an ELF file
+	-./$(BIN) Makefile
+	@# 64bit binary
+	-./$(BIN) test/asm_hello
+	@# 32bit binary
+	-./$(BIN) test/asm_hello32
+	@# a c++ binary
+	-./$(BIN) test/hello_cpp
+	@# itself
+	-./$(BIN) $(BIN)
+	@# whew - all done
+	@echo
+	@make --no-print-directory cov
 
 testprogs:
 	$(MAKE) -C test
@@ -88,4 +112,10 @@ testprogs:
 testprogs-clean:
 	$(MAKE) -C test clean
 
-all-clean: clean kcov-clean testprogs-clean
+allclean: clean testprogs-clean
+
+cov:
+	@ls *.gcda >/dev/null 2>&1 && gcov -a *.c | awk ' \
+		/^File/{ name=substr($$0, index($$0," ")); } \
+		/^Lines/{ if (name=="") { print "===" }; print substr($$0,1,index($$0,":")) " " substr($$0,index($$0,":")+1) name; name=""; } \
+		{ next }' || echo "Try 'make coverage' first"

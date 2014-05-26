@@ -35,14 +35,15 @@ int main(int argc,const char* argv[])
     printf("Length: %'ld bytes\n",H->length);
     printf("\n");
 
-    if (emma_segment_count(&H)>0) {
-        printf("Segments (%d)\n",emma_segment_count(&H));
+    unsigned int segcount=emma_segment_count(&H);
+    if (segcount>0) {
+        printf("Segments (%d)\n",segcount);
         printf("%3s %8s %8s %8s %8s %8s %8s %8s %8s\n",
                 "Seg",
                 "type","flags","foffset","vaddr",
                 "paddr","filesz","memsz","align");
-        for (unsigned int j=0; j<emma_segment_count(&H); ++j) {
-            segment_t* segment=emma_segment(&H,j);
+        for (unsigned int j=0; j<segcount; ++j) {
+            segment_t* segment=emma_get_segment(&H,j);
             printf("%2d)",j);
             printf(" %08x",segment->type);
             printf(" %08x",segment->flags);
@@ -57,17 +58,18 @@ int main(int argc,const char* argv[])
         printf("\n");
     }
 
-    if (emma_section_count(&H)>0) {
-        printf("Sections (%d)\n",emma_section_count(&H));
+    unsigned int seccount=emma_section_count(&H);
+    if (seccount>0) {
+        printf("Sections (%d)\n",seccount);
         for (unsigned int show=0; show<2; ++show) {
-            for (unsigned int j=0; j<emma_section_count(&H); ++j) {
-                section_t* section=emma_section(&H,j);
+            for (unsigned int j=0; j<seccount; ++j) {
+                section_t* section=emma_get_section(&H,j);
                 printf("%3d) ",j);
                 printf("0x%08lx ",section->addr);
-                printf("%08lxo ",section->offset);
-                printf("%8lxs ",section->size);
-                printf("%8xl ",section->link);
-                printf("%08lxf [",section->flags);
+                printf("%08lx-of ",section->offset);
+                printf("%8lx-sz ",section->size);
+                printf("%8x-lk ",section->link);
+                printf("%08lx-fl [",section->flags);
                 for (unsigned int k=0; k<8; ++k) {
                     if (k<section->size) {
                         printf("%02x",*(H->memmap+section->offset+k)&0xff);
@@ -89,10 +91,11 @@ int main(int argc,const char* argv[])
         }
     }
 
-    if (emma_symbol_count(&H)>0) {
-        printf("Symbols (%d)\n",emma_symbol_count(&H));
-        for (unsigned int j=0; j<emma_symbol_count(&H); ++j) {
-            symbol_t* symbol=emma_symbol(&H,j);
+    unsigned int symcount=emma_symbol_count(&H);
+    if (symcount>0) {
+        printf("Symbols (%d)\n",symcount);
+        for (unsigned int j=0; j<symcount; ++j) {
+            symbol_t* symbol=emma_get_symbol(&H,j);
             printf("0x%08lx ",symbol->value);
             printf("%08lx ",symbol->flags);
             printf("%08lx ",symbol->type);
