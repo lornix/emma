@@ -16,7 +16,6 @@ CFLAGS+=-O0
 #
 # yell out all warnings and whatnot
 CFLAGS+=-Wall -Wextra -Wunused -Wconversion
-CFLAGS+=-Winline
 #
 # Want to REALLY be picky? uncomment two lines below
 #CFLAGS+=-Wreturn-local-addr -Wshadow -Wundef -Wwrite-strings -Wmissing-declarations -Wmissing-prototypes

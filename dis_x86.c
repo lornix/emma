@@ -18,8 +18,13 @@
 void dis_x86(emma_handle* H,section_t* section)
 {
     uint64_t addr=section->offset;
-    uint64_t maxaddr=section->offset+section->size;
+    uint64_t maxaddr=addr+section->size;
     const char* mm=(*H)->memmap;
+
+    /* FIXME:temporarily limit output to 256 bytes max */
+    if (section->size>256) {
+        maxaddr=section->offset+256;
+    }
 
     while (addr<maxaddr) {
         char addrline[20+1],hexline[31+1],mnemline[81],cmntline[81],tmpline[81];
