@@ -32,7 +32,37 @@ int main(int argc,const char* argv[])
             estr(H->endianness));
     printf("Base Addr:  0x%"PRIx64"\n",H->baseaddress);
     printf("Start Addr: 0x%"PRIx64"\n",H->startaddress);
-    printf("Length: %'"PRId64" bytes\n",H->length);
+    uint64_t len=H->length;
+    printf("Length: %'"PRId64" bytes",len);
+    printf(" ( 0x%"PRIx64" )",len);
+    printf(" ( ");
+    if (len>=(1<<30)) {
+        printf("%"PRId64"G",len>>30);
+        len=len&((1<<30)-1);
+        if (len>0) {
+            putchar('+');
+        }
+    }
+    if (len>=(1<<20)) {
+        printf("%"PRId64"M",len>>20);
+        len=len&((1<<20)-1);
+        if (len>0) {
+            putchar('+');
+        }
+    }
+    if (len>=(1<<10)) {
+        printf("%"PRId64"K",len>>10);
+        len=len&((1<<10)-1);
+        if (len>0) {
+            putchar('+');
+        }
+    }
+    if (len>0) {
+        printf("%"PRId64"B",len);
+    }
+    printf(" )\n");
+    printf("String Table Index: %d\n",H->strindex);
+
     printf("\n");
 
     unsigned int segcount=emma_segment_count(&H);
@@ -61,33 +91,27 @@ int main(int argc,const char* argv[])
     unsigned int seccount=emma_section_count(&H);
     if (seccount>0) {
         printf("Sections (%d)\n",seccount);
-        for (unsigned int show=0; show<2; ++show) {
-            for (unsigned int j=0; j<seccount; ++j) {
-                section_t* section=emma_get_section(&H,j);
-                printf("%3d) ",j);
-                printf("0x%08"PRIx64" ",section->addr);
-                printf("%08"PRIx64"-of ",section->offset);
-                printf("%8"PRIx64"-sz ",section->size);
-                printf("%8x-lk ",section->link);
-                printf("%08"PRIx64"-fl [",section->flags);
-                for (unsigned int k=0; k<8; ++k) {
-                    if (k<section->size) {
-                        printf("%02x",*(H->memmap+section->offset+k)&0xff);
-                    } else {
-                        printf("  ");
-                    }
-                }
-                printf("]");
-                if(section->name!=0) {
-                    /* printf(" %s",(H->memmap+section->name)); */
-                    printf(" %8"PRIx64"",section->name);
-                }
-                printf("\n");
-                if (show) {
-                    dis_x86(&H,section);
+        for (unsigned int j=0; j<seccount; ++j) {
+            section_t* section=emma_get_section(&H,j);
+            printf("%3d) ",j);
+            printf("0x%08"PRIx64" ",section->addr);
+            printf("%08"PRIx64"-of ",section->offset);
+            printf("%8"PRIx64"-sz ",section->size);
+            printf("%8x-ty ",section->type);
+            printf("%8x-nf ",section->info);
+            printf("%8x-lk ",section->link);
+            printf("%08"PRIx64"-fl [",section->flags);
+            for (unsigned int k=0; k<8; ++k) {
+                if (k<section->size) {
+                    printf("%02x",*(H->memmap+section->offset+k)&0xff);
+                } else {
+                    printf("  ");
                 }
             }
+            printf("] ");
+            printf("%s",(char*)section->name);
             printf("\n");
+            /* dis_x86(&H,section); */
         }
     }
 

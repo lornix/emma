@@ -70,7 +70,6 @@ typedef struct {
     segment_t** segments;
     uint64_t programheader;
     uint64_t sectionheader;
-    int fd;
     unsigned int section_count;
     unsigned int symbol_count;
     unsigned int segment_count;
@@ -81,6 +80,7 @@ typedef struct {
     unsigned int shentsize;
     unsigned int shnum;
     unsigned int strindex;
+    int fd;
     estr_enum elf_class;
     estr_enum bits;
     estr_enum filetype;

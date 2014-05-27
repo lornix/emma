@@ -345,6 +345,12 @@ static void parse_section_header(emma_handle* H)
                     make_little_endian_quad(H,elf64->sh_entsize));
         }
     }
+    /* set up section name pointers */
+    unsigned int seccount=(*H)->section_count;
+    for (unsigned int i=0; i<seccount; ++i) {
+        section_t* section=(*H)->sections[i];
+        section->name+=(uint64_t)(*H)->memmap+(*H)->sections[(*H)->strindex]->offset;
+    }
 }
 
 emma_handle emma_init(void)
