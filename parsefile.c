@@ -424,9 +424,9 @@ int emma_open(emma_handle* H,const char* fname)
 #if _POSIX_MAPPED_FILES > 0
     /* yay! mmaping is available, easy-peasy! */
     mm=mmap(0x0,(size_t)((*H)->length),PROT_READ,MAP_SHARED,(*H)->fd,0);
+    close((*H)->fd);
     if (mm==MAP_FAILED) {
         /* mmap failed? */
-        close((*H)->fd);
         return 1;
     }
 #else
@@ -454,11 +454,9 @@ int emma_open(emma_handle* H,const char* fname)
         /* bump pointer to load in proper place */
         mmoffset+=err;
     } while (err>0);
+    close((*H)->fd);
 
 #endif
-
-    /* we're done with the file */
-    close((*H)->fd);
 
     (*H)->memmap=mm;
 
@@ -557,9 +555,6 @@ int emma_close(emma_handle* H)
 #else
     free((void*)(*H)->memmap);
 #endif
-
-    /* all done, close file */
-    close((*H)->fd);
 
     /* all done, clean up */
     if ((*H)->symbol_count>0) {

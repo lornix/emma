@@ -5,7 +5,6 @@
 #include <unistd.h>
 // for exit
 #include <stdio.h>
-#include <locale.h>
 
 #include "parsefile.h"
 #include "dis_x86.h"
@@ -24,7 +23,6 @@ int main(int argc,const char* argv[])
     if (err!=0) {
         EXITERROR("Unable to open file: %s",argv[arg]);
     }
-    setlocale(LC_ALL,"");
     printf("File: %s\n",argv[arg]);
     printf("File Type: %s (%s %s)\n",
             estr(H->filetype),
@@ -33,7 +31,7 @@ int main(int argc,const char* argv[])
     printf("Base Addr:  0x%"PRIx64"\n",H->baseaddress);
     printf("Start Addr: 0x%"PRIx64"\n",H->startaddress);
     uint64_t len=H->length;
-    printf("Length: %'"PRId64" bytes",len);
+    printf("Length: %"PRId64" bytes",len);
     printf(" ( 0x%"PRIx64" )",len);
     printf(" ( ");
     if (len>=(1<<30)) {
