@@ -14,9 +14,16 @@ CXX:=g++
 .SUFFIXES:
 .SUFFIXES: .c .cpp .s .o
 #
+X86_64=$(shell uname -m)
+#
 .phony: all clean
 #
-SRC=$(wildcard *.c) $(wildcard *.cpp) $(wildcard *.s)
+SRC=$(wildcard *.c) $(wildcard *.cpp)
+#
+ifeq ($(X86_64),x86_64)
+SRC+=$(wildcard *.s)
+endif
+#
 EXECS=$(basename $(SRC))
 #
 all: $(EXECS)

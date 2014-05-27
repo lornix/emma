@@ -14,6 +14,5 @@ test/pokefunction
 test/rdtsc
 test/rscalc
 test/sqrt
-test/tracer1
 test/tst64
 test/tstalarm
