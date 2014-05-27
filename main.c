@@ -30,9 +30,9 @@ int main(int argc,const char* argv[])
             estr(H->filetype),
             estr(H->bits),
             estr(H->endianness));
-    printf("Base Addr:  0x%llx\n",H->baseaddress);
-    printf("Start Addr: 0x%llx\n",H->startaddress);
-    printf("Length: %'lld bytes\n",H->length);
+    printf("Base Addr:  0x%"PRIx64"\n",H->baseaddress);
+    printf("Start Addr: 0x%"PRIx64"\n",H->startaddress);
+    printf("Length: %'"PRId64" bytes\n",H->length);
     printf("\n");
 
     unsigned int segcount=emma_segment_count(&H);
@@ -47,12 +47,12 @@ int main(int argc,const char* argv[])
             printf("%2d)",j);
             printf(" %08x",segment->type);
             printf(" %08x",segment->flags);
-            printf(" %8llx",segment->offset);
-            printf(" %8llx",segment->vaddr);
-            printf(" %8llx",segment->paddr);
-            printf(" %8llx",segment->sizefile);
-            printf(" %8llx",segment->sizemem);
-            printf(" %8llx",segment->alignment);
+            printf(" %8"PRIx64"",segment->offset);
+            printf(" %8"PRIx64"",segment->vaddr);
+            printf(" %8"PRIx64"",segment->paddr);
+            printf(" %8"PRIx64"",segment->sizefile);
+            printf(" %8"PRIx64"",segment->sizemem);
+            printf(" %8"PRIx64"",segment->alignment);
             printf("\n");
         }
         printf("\n");
@@ -65,11 +65,11 @@ int main(int argc,const char* argv[])
             for (unsigned int j=0; j<seccount; ++j) {
                 section_t* section=emma_get_section(&H,j);
                 printf("%3d) ",j);
-                printf("0x%08llx ",section->addr);
-                printf("%08llx-of ",section->offset);
-                printf("%8llx-sz ",section->size);
+                printf("0x%08"PRIx64" ",section->addr);
+                printf("%08"PRIx64"-of ",section->offset);
+                printf("%8"PRIx64"-sz ",section->size);
                 printf("%8x-lk ",section->link);
-                printf("%08llx-fl [",section->flags);
+                printf("%08"PRIx64"-fl [",section->flags);
                 for (unsigned int k=0; k<8; ++k) {
                     if (k<section->size) {
                         printf("%02x",*(H->memmap+section->offset+k)&0xff);
@@ -80,7 +80,7 @@ int main(int argc,const char* argv[])
                 printf("]");
                 if(section->name!=0) {
                     /* printf(" %s",(H->memmap+section->name)); */
-                    printf(" %8llx",section->name);
+                    printf(" %8"PRIx64"",section->name);
                 }
                 printf("\n");
                 if (show) {
@@ -96,9 +96,9 @@ int main(int argc,const char* argv[])
         printf("Symbols (%d)\n",symcount);
         for (unsigned int j=0; j<symcount; ++j) {
             symbol_t* symbol=emma_get_symbol(&H,j);
-            printf("0x%08llx ",symbol->value);
-            printf("%08llx ",symbol->flags);
-            printf("%08llx ",symbol->type);
+            printf("0x%08"PRIx64" ",symbol->value);
+            printf("%08"PRIx64" ",symbol->flags);
+            printf("%08"PRIx64" ",symbol->type);
             printf("%s\n",symbol->name);
         }
     }

@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+/* PRIx64 */
+#include <inttypes.h>
 
 /* if VERSION + REVISION not set, give a default */
 #ifndef VERREV

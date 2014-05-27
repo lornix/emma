@@ -26,7 +26,7 @@ void dis_x86(emma_handle* H,section_t* section)
         hexline[0]=0;
         mnemline[0]=0;
         cmntline[0]=0;
-        snprintf(addrline,20,"0x%08llx:",addr);
+        snprintf(addrline,20,"0x%08"PRIx64":",addr);
         unsigned int byte=*(mm+addr)&0xff;
         snprintf(hexline,4,"%02x",byte);
         snprintf(mnemline,80,".byte\t0x%02x",byte);
