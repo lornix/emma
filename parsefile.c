@@ -447,6 +447,10 @@ int emma_open(emma_handle* H,const char* fname)
             close((*H)->fd);
             return 1;
         }
+        if ((uint64_t)(err+mmoffset)==(*H)->length) {
+            /* got the whole thing in one gulp! */
+            break;
+        }
         /* bump pointer to load in proper place */
         mmoffset+=err;
     } while (err>0);
@@ -547,8 +551,12 @@ int emma_close(emma_handle* H)
         return 1;
     }
 
+#if _POSIX_MAPPED_FILES > 0
     /* release mmapping */
     munmap((void*)(*H)->memmap,(size_t)((*H)->length));
+#else
+    free((void*)(*H)->memmap);
+#endif
 
     /* all done, close file */
     close((*H)->fd);
