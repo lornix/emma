@@ -17,8 +17,8 @@
 
 void dis_x86(emma_handle* H,section_t* section)
 {
-    unsigned long addr=section->offset;
-    unsigned long maxaddr=section->offset+section->size;
+    uint64_t addr=section->offset;
+    uint64_t maxaddr=section->offset+section->size;
     const char* mm=(*H)->memmap;
 
     while (addr<maxaddr) {
@@ -26,7 +26,7 @@ void dis_x86(emma_handle* H,section_t* section)
         hexline[0]=0;
         mnemline[0]=0;
         cmntline[0]=0;
-        snprintf(addrline,20,"0x%08lx:",addr);
+        snprintf(addrline,20,"0x%08llx:",addr);
         unsigned int byte=*(mm+addr)&0xff;
         snprintf(hexline,4,"%02x",byte);
         snprintf(mnemline,80,".byte\t0x%02x",byte);

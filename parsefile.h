@@ -28,17 +28,17 @@ typedef enum estr_enum {
 } estr_enum;
 
 typedef struct symbol_t {
+    uint64_t  value;
+    uint64_t  flags;
+    uint64_t  type;
     const    char* name;
-    unsigned long  value;
-    unsigned long  flags;
-    unsigned long  type;
 } symbol_t;
 
 typedef struct section_t {
-    size_t name;
-    size_t addr;
-    size_t offset;
-    size_t size;
+    uint64_t name;
+    uint64_t addr;
+    uint64_t offset;
+    uint64_t size;
     uint64_t flags;
     uint64_t align;
     uint64_t entsize;
@@ -49,14 +49,14 @@ typedef struct section_t {
 } section_t;
 
 typedef struct segment_t {
-    unsigned int type;
-    unsigned int flags;
     uint64_t offset;
     uint64_t vaddr;
     uint64_t paddr;
-    size_t   sizefile;
-    size_t   sizemem;
+    uint64_t sizefile;
+    uint64_t sizemem;
     uint64_t alignment;
+    unsigned int type;
+    unsigned int flags;
 } segment_t;
 
 typedef struct {
@@ -64,7 +64,7 @@ typedef struct {
     const char* memmap;
     uint64_t baseaddress;
     uint64_t startaddress;
-    size_t length;
+    uint64_t length;
     section_t** sections;
     symbol_t** symbols;
     segment_t** segments;

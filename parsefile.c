@@ -26,16 +26,16 @@
 
 static int create_symbol(emma_handle* H,
         const char* name,
-        unsigned long value,
-        unsigned long flags,
-        unsigned long type);
+        uint64_t value,
+        uint64_t flags,
+        uint64_t type);
 static int create_section(emma_handle* H,
-        size_t name,
+        uint64_t name,
         unsigned int type,
         uint64_t flags,
-        size_t addr,
-        size_t offset,
-        size_t size,
+        uint64_t addr,
+        uint64_t offset,
+        uint64_t size,
         unsigned int link,
         unsigned int info,
         uint64_t align,
@@ -46,8 +46,8 @@ static int create_segment(emma_handle* H,
         uint64_t offset,
         uint64_t vaddr,
         uint64_t paddr,
-        size_t sizefile,
-        size_t sizemem,
+        uint64_t sizefile,
+        uint64_t sizemem,
         uint64_t alignment);
 
 static char* demangle(const char* name)
@@ -107,7 +107,6 @@ inline uint64_t make_little_endian_quad(emma_handle* H,uint64_t value)
 }
 static void parse_elf_header(emma_handle* H)
 {
-    Elf64_Ehdr elf;
     const char* mm=(*H)->memmap;
 
     /* check ELF version */
@@ -171,6 +170,9 @@ static void parse_elf_header(emma_handle* H)
 
     assert(((*H)->elf_class==BITS_32)||((*H)->elf_class==BITS_64));
 
+    /* my own storage unit */
+    Elf64_Ehdr elf;
+
     if ((*H)->elf_class==BITS_32) {
         /* handle 32 bit header */
         Elf32_Ehdr* elf32=(Elf32_Ehdr*)mm;
@@ -211,6 +213,9 @@ static void parse_elf_header(emma_handle* H)
             break;
         case EM_X86_64: /* 64 bit x86_64 */
             (*H)->bits=BITS_64;
+            break;
+        case EM_ARM: /* 32 bit ARM */
+            (*H)->bits=BITS_32;
             break;
         default: /* uh oh */
             (*H)->bits=0;
@@ -380,7 +385,7 @@ int emma_open(emma_handle* H,const char* fname)
     const char* mm;
 #if _POSIX_MAPPED_FILES > 0
     /* yay! mmaping is available, easy-peasy! */
-    mm=mmap(0x0,(*H)->length,PROT_READ,MAP_SHARED,(*H)->fd,0);
+    mm=mmap(0x0,(size_t)((*H)->length),PROT_READ,MAP_SHARED,(*H)->fd,0);
     if (mm==MAP_FAILED) {
         /* mmap failed? */
         close((*H)->fd);
@@ -507,7 +512,7 @@ int emma_close(emma_handle* H)
     }
 
     /* release mmapping */
-    munmap((void*)(*H)->memmap,(*H)->length);
+    munmap((void*)(*H)->memmap,(size_t)((*H)->length));
 
     /* all done, close file */
     close((*H)->fd);
@@ -545,9 +550,9 @@ int emma_close(emma_handle* H)
 }
 static int create_symbol(emma_handle* H,
         const char* name,
-        unsigned long value,
-        unsigned long flags,
-        unsigned long symtype)
+        uint64_t value,
+        uint64_t flags,
+        uint64_t symtype)
 {
     if ((H==0)||(*H==0)) {
         /* don't deref 0 */
@@ -574,12 +579,12 @@ static int create_symbol(emma_handle* H,
     return 0;
 }
 static int create_section(emma_handle* H,
-        size_t name,
+        uint64_t name,
         unsigned int type,
         uint64_t flags,
-        size_t addr,
-        size_t offset,
-        size_t size,
+        uint64_t addr,
+        uint64_t offset,
+        uint64_t size,
         unsigned int link,
         unsigned int info,
         uint64_t align,
@@ -621,8 +626,8 @@ static int create_segment(emma_handle* H,
         uint64_t offset,
         uint64_t vaddr,
         uint64_t paddr,
-        size_t sizefile,
-        size_t sizemem,
+        uint64_t sizefile,
+        uint64_t sizemem,
         uint64_t alignment)
 {
     if ((H==0)||(*H==0)) {
