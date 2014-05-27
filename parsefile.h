@@ -35,7 +35,7 @@ typedef struct symbol_t {
 } symbol_t;
 
 typedef struct section_t {
-    char* name;
+    const char* name;
     uint64_t addr;
     uint64_t offset;
     uint64_t size;

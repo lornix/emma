@@ -25,12 +25,12 @@
 #include <fcntl.h>
 
 static int create_symbol(emma_handle* H,
-        char* name,
+        const char* name,
         uint64_t value,
         uint64_t flags,
         uint64_t type);
 static int create_section(emma_handle* H,
-        char* name,
+        const char* name,
         unsigned int type,
         uint64_t flags,
         uint64_t addr,
@@ -404,7 +404,7 @@ int emma_open(emma_handle* H,const char* fname)
 
     (*H)->filename=strdup(fname);
 
-    (*H)->fd=open(fname,O_RDONLY);
+    (*H)->fd=open((*H)->filename,O_RDONLY);
     if ((*H)->fd==0) {
         /* issue opening file? */
         return 1;
@@ -588,7 +588,7 @@ int emma_close(emma_handle* H)
     return 0;
 }
 static int create_symbol(emma_handle* H,
-        char* name,
+        const char* name,
         uint64_t value,
         uint64_t flags,
         uint64_t symtype)
@@ -618,7 +618,7 @@ static int create_symbol(emma_handle* H,
     return 0;
 }
 static int create_section(emma_handle* H,
-        char* name,
+        const char* name,
         unsigned int type,
         uint64_t flags,
         uint64_t addr,
