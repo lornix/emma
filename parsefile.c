@@ -25,12 +25,12 @@
 #include <fcntl.h>
 
 static int create_symbol(emma_handle* H,
-        const char* name,
+        char* name,
         uint64_t value,
         uint64_t flags,
         uint64_t type);
 static int create_section(emma_handle* H,
-        uint64_t name,
+        char* name,
         unsigned int type,
         uint64_t flags,
         uint64_t addr,
@@ -317,7 +317,8 @@ static void parse_section_header(emma_handle* H)
         for (unsigned int i=0; i<(*H)->shnum; ++i) {
             Elf32_Shdr* elf32=(void*)(*H)->memmap+(*H)->sectionheader+(i*(*H)->shentsize);
             create_section(H,
-                    make_little_endian_dword(H,elf32->sh_name),
+                    /* grrr, double cast, booo! */
+                    (char*)(uint64_t)make_little_endian_dword(H,elf32->sh_name),
                     make_little_endian_dword(H,elf32->sh_type),
                     make_little_endian_dword(H,elf32->sh_flags),
                     make_little_endian_dword(H,elf32->sh_addr),
@@ -333,7 +334,8 @@ static void parse_section_header(emma_handle* H)
         for (unsigned int i=0; i<(*H)->shnum; ++i) {
             Elf64_Shdr* elf64=(void*)(*H)->memmap+(*H)->sectionheader+(i*(*H)->shentsize);
             create_section(H,
-                    make_little_endian_dword(H,elf64->sh_name),
+                    /* again! with the double casting! ick! */
+                    (char*)(uint64_t)make_little_endian_dword(H,elf64->sh_name),
                     make_little_endian_dword(H,elf64->sh_type),
                     make_little_endian_quad(H,elf64->sh_flags),
                     make_little_endian_quad(H,elf64->sh_addr),
@@ -437,7 +439,7 @@ int emma_open(emma_handle* H,const char* fname)
         (*H)->bits=BITS_64;
         (*H)->elf_class=BITS_64;
         /* TODO: option to specify base address */
-        create_section(H,0x0,0,0,0x0,0x0,(*H)->length,0,0,1,0);
+        create_section(H,".dummy.section",0,0,0x0,0x0,(*H)->length,0,0,1,0);
         /* TODO: option to specify start address */
         create_symbol(H, "_start.dummy",0x0,0x0,0x0);
         return 0;
@@ -447,7 +449,7 @@ int emma_open(emma_handle* H,const char* fname)
     parse_program_header(H);
     parse_section_header(H);
 
-    create_section(H,0x0,0,0,(*H)->baseaddress,0x0,(*H)->length,0,0,1,0);
+    create_section(H,".section.dummy",0,0,(*H)->baseaddress,0x0,(*H)->length,0,0,1,0);
     create_symbol(H, "_start.dummy",(*H)->startaddress,0x0,0x0);
 
     return 0;
@@ -555,7 +557,7 @@ int emma_close(emma_handle* H)
     return 0;
 }
 static int create_symbol(emma_handle* H,
-        const char* name,
+        char* name,
         uint64_t value,
         uint64_t flags,
         uint64_t symtype)
@@ -585,7 +587,7 @@ static int create_symbol(emma_handle* H,
     return 0;
 }
 static int create_section(emma_handle* H,
-        uint64_t name,
+        char* name,
         unsigned int type,
         uint64_t flags,
         uint64_t addr,

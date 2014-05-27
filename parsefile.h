@@ -31,11 +31,11 @@ typedef struct symbol_t {
     uint64_t  value;
     uint64_t  flags;
     uint64_t  type;
-    const    char* name;
+    char* name;
 } symbol_t;
 
 typedef struct section_t {
-    uint64_t name;
+    char* name;
     uint64_t addr;
     uint64_t offset;
     uint64_t size;
