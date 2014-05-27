@@ -255,7 +255,7 @@ static void parse_elf_header(emma_handle* H)
     (*H)->phnum=elf.e_phnum;
     (*H)->shentsize=elf.e_shentsize;
     (*H)->shnum=elf.e_shnum;
-    (*H)->strindex=elf.e_shstrndx;
+    (*H)->section_string_index=elf.e_shstrndx;
 }
 static void parse_program_header(emma_handle* H)
 {
@@ -348,11 +348,41 @@ static void parse_section_header(emma_handle* H)
         }
     }
     /* set up section name pointers */
+    unsigned int strindex=(*H)->section_string_index;
     unsigned int seccount=(*H)->section_count;
+    if ((strindex==0)||(strindex>=seccount)) {
+        /* TODO:perhaps a 'problem' entry? */
+        fprintf(stderr,"WARN: Program Header SHSTRINDEX not valid (%d of %d)\n",
+                strindex,seccount);
+        /* TODO: perhaps an option to search for proper segment? */
+        /* it's USUALLY the FIRST type 3 section, with no flags set */
+        for (unsigned int i=0; i<seccount; ++i) {
+            section_t* section=(*H)->sections[i];
+            if ((section->type==SHT_STRTAB)&&       /* it's a STRTAB (3) */
+                    (section->flags==0)&&           /* with no flags set */
+                    (*((*H)->memmap+section->offset)==0)&& /* and *0==0 */
+                    (*((*H)->memmap+section->offset+1)=='.')) { /* and *1=='.' */
+                /* TODO:perhaps a 'problem' entry? */
+                strindex=i;
+                (*H)->section_string_index=i;
+                fprintf(stderr,"WARN: Program Header SHSTRINDEX fixed, set to %d\n",
+                        strindex);
+                break;
+            }
+
+        }
+    }
     for (unsigned int i=0; i<seccount; ++i) {
         section_t* section=(*H)->sections[i];
-        section->name+=(uint64_t)(*H)->memmap+(*H)->sections[(*H)->strindex]->offset;
+        if ((strindex>0)&&(strindex<seccount)) {
+            section->name+=(uint64_t)(*H)->memmap+(*H)->sections[strindex]->offset;
+        } else {
+            section->name=".bad_shstrtab_index";
+        }
     }
+}
+static void parse_symbol_section(emma_handle* H)
+{
 }
 
 emma_handle emma_init(void)
@@ -439,18 +469,16 @@ int emma_open(emma_handle* H,const char* fname)
         (*H)->bits=BITS_64;
         (*H)->elf_class=BITS_64;
         /* TODO: option to specify base address */
-        create_section(H,".dummy.section",0,0,0x0,0x0,(*H)->length,0,0,1,0);
+        create_section(H,".section.raw",0,0,0x0,0x0,(*H)->length,0,0,1,0);
         /* TODO: option to specify start address */
-        create_symbol(H, "_start.dummy",0x0,0x0,0x0);
+        create_symbol(H, "_start.raw",0x0,0x0,0x0);
         return 0;
     }
 
     parse_elf_header(H);
     parse_program_header(H);
     parse_section_header(H);
-
-    create_section(H,".section.dummy",0,0,(*H)->baseaddress,0x0,(*H)->length,0,0,1,0);
-    create_symbol(H, "_start.dummy",(*H)->startaddress,0x0,0x0);
+    parse_symbol_section(H);
 
     return 0;
 }

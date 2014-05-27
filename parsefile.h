@@ -79,7 +79,7 @@ typedef struct {
     unsigned int phnum;
     unsigned int shentsize;
     unsigned int shnum;
-    unsigned int strindex;
+    unsigned int section_string_index;
     int fd;
     estr_enum elf_class;
     estr_enum bits;
