@@ -2,6 +2,11 @@
 # Generic compiles-it-all Makefile
 #  Loni Nix <lornix@lornix.com>
 #
+# save any flags from environment
+SAVE_CFLAGS:=$(CFLAGS)
+# start empty again
+CFLAGS=
+#
 # adhere to a higher standard!
 CFLAGS+=-std=c99
 #
@@ -38,6 +43,9 @@ CFLAGS+=-Wall -Wextra -Wunused -Wconversion
 # LDFLAGS+=
 # LDFLAGS+=-lm
 # LDFLAGS+=-lbfd
+#
+# add environment CFLAGS to end so they take precedence
+CFLAGS+=$(SAVE_CFLAGS)
 #
 CC:=gcc
 #
