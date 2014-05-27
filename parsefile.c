@@ -12,11 +12,16 @@
 #include <elf.h>
 
 #include <stdio.h>
+/* assert */
 #include <assert.h>
+/* mmap munmap */
 #include <sys/mman.h>
 #include <sys/types.h>
+/* fstat */
 #include <sys/stat.h>
+/* close read */
 #include <unistd.h>
+/* open */
 #include <fcntl.h>
 
 static int create_symbol(emma_handle* H,
@@ -372,11 +377,41 @@ int emma_open(emma_handle* H,const char* fname)
     /* might be more we need to copy over, but nothing stands out */
     (*H)->length=(size_t)stats.st_size;
 
-    const char* mm=mmap(0x0,(*H)->length,PROT_READ,MAP_SHARED,(*H)->fd,0);
+    const char* mm;
+#if _POSIX_MAPPED_FILES > 0
+    /* yay! mmaping is available, easy-peasy! */
+    mm=mmap(0x0,(*H)->length,PROT_READ,MAP_SHARED,(*H)->fd,0);
     if (mm==MAP_FAILED) {
+        /* mmap failed? */
         close((*H)->fd);
         return 1;
     }
+#else
+    /* uh oh, file mmaping isn't available... a'loading we shall go! */
+    mm=calloc(1,(*H)->length);
+    if (mm==0) {
+        /* calloc failed? */
+        close((*H)->fd);
+        return 1;
+    }
+    ssize_t mmoffset=0;
+    ssize_t err;
+    do {
+        /* read a chunk of file (hopefully all of it!) */
+        err=read((*H)->fd,(void*)mm+mmoffset,(*H)->length);
+        if (err<0) {
+            /* read failed */
+            close((*H)->fd);
+            return 1;
+        }
+        /* bump pointer to load in proper place */
+        mmoffset+=err;
+    } while (err>0);
+
+#endif
+
+    /* we're done with the file */
+    close((*H)->fd);
 
     (*H)->memmap=mm;
 
