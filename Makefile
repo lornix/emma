@@ -8,7 +8,7 @@ SAVE_CFLAGS:=$(CFLAGS)
 CFLAGS=
 #
 # adhere to a higher standard!
-CFLAGS+=-std=c99
+CFLAGS+=-std=gnu99
 #
 # pretty much always want debugging symbols included
 CFLAGS+=-g3
@@ -21,6 +21,7 @@ CFLAGS+=-O0
 #
 # yell out all warnings and whatnot
 CFLAGS+=-Wall -Wextra -Wunused -Wconversion
+CFLAGS+=-Wsign-conversion
 #
 # Want to REALLY be picky? uncomment two lines below
 #CFLAGS+=-Wreturn-local-addr -Wshadow -Wundef -Wwrite-strings -Wmissing-declarations -Wmissing-prototypes
@@ -55,11 +56,11 @@ CC:=gcc
 SHELL=/bin/sh
 #
 # build VERREV macro
-VERSION=$(shell cat VERSION)
-REVISION=$(shell git rev-parse --short HEAD)
-VERREV=$(VERSION)-$(REVISION)
+VERSION:=$(shell cat VERSION)
+REVISION:=$(shell git rev-parse --short HEAD)
+VERREV:=$(VERSION)-$(REVISION)
 #
-BIN=emma
+BIN:=emma
 #
 CFLAGS+=-D'VERREV="$(VERREV)"'
 #
@@ -67,8 +68,8 @@ CFLAGS+=-D'VERREV="$(VERREV)"'
 
 all: $(BIN)
 
-OBJS=$(addsuffix .o,$(basename $(wildcard *.c)))
-HDRS=$(wildcard *.h)
+OBJS:=$(addsuffix .o,$(basename $(wildcard *.c)))
+HDRS:=$(wildcard *.h)
 
 $(BIN): $(OBJS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
@@ -77,26 +78,26 @@ $(BIN): $(OBJS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -c -o $@ $<
 
 clean:
-	rm -f $(BIN) $(OBJS)
-	rm -f gmon.out *.gcda *.gcov *.gcno
+	$(RM) $(BIN) $(OBJS)
+	$(RM) gmon.out *.gcda *.gcov *.gcno
 
 coverage: clean testprogs
 	@CFLAGS="--coverage" $(MAKE) all
 	@# no file
 	-./$(BIN)
 	@# non-existent file
-	@rm -f /tmp/non-existent-file-$(VERSION)
+	@$(RM) /tmp/non-existent-file-$(VERSION)
 	-./$(BIN) /tmp/non-existent-file-$(VERSION)
 	@# empty file
-	@rm -f /tmp/empty-file-$(VERSION)
+	@$(RM) /tmp/empty-file-$(VERSION)
 	@touch /tmp/empty-file-$(VERSION)
 	-./$(BIN) /tmp/empty-file-$(VERSION)
-	@rm -f /tmp/empty-file-$(VERSION)
+	@$(RM) /tmp/empty-file-$(VERSION)
 	@# unreadable (empty) file
 	@touch /tmp/unreadable-file-$(VERSION)
 	@chmod 000 /tmp/unreadable-file-$(VERSION)
 	-./$(BIN) /tmp/unreadable-file-$(VERSION)
-	@rm -f /tmp/unreadable-file-$(VERSION)
+	@$(RM) /tmp/unreadable-file-$(VERSION)
 	@# not an ELF file
 	-./$(BIN) Makefile
 	@# 64bit binary

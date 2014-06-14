@@ -31,7 +31,7 @@ int main(int argc,const char* argv[])
     printf("Base Addr:  0x%"PRIx64"\n",H->baseaddress);
     printf("Start Addr: 0x%"PRIx64"\n",H->startaddress);
     uint64_t len=H->length;
-    printf("Length: %"PRId64" bytes",len);
+    printf("Length: %"PRIu64" bytes",len);
     printf(" ( 0x%"PRIx64" )",len);
     printf(" ( ");
     if (len>=(1<<30)) {
@@ -56,23 +56,23 @@ int main(int argc,const char* argv[])
         }
     }
     if (len>0) {
-        printf("%"PRId64,len);
+        printf("%"PRIu64,len);
     }
     printf(" )\n");
-    printf("String Table Index: %d\n",H->section_string_index);
+    printf("String Table Index: %u\n",H->section_string_index);
 
     printf("\n");
 
     unsigned int segcount=emma_segment_count(&H);
     if (segcount>0) {
-        printf("Segments (%d)\n",segcount);
+        printf("Segments (%u)\n",segcount);
         printf("%3s %8s %8s %8s %8s %8s %8s %8s %8s\n",
                 "Seg",
                 "type","flags","foffset","vaddr",
                 "paddr","filesz","memsz","align");
         for (unsigned int j=0; j<segcount; ++j) {
             segment_t* segment=emma_get_segment(&H,j);
-            printf("%2d)",j);
+            printf("%2u)",j);
             printf(" %8x",segment->type);
             printf(" %8x",segment->flags);
             printf(" %8"PRIx64"",segment->offset);
@@ -88,10 +88,10 @@ int main(int argc,const char* argv[])
 
     unsigned int seccount=emma_section_count(&H);
     if (seccount>0) {
-        printf("Sections (%d)\n",seccount);
+        printf("Sections (%u)\n",seccount);
         for (unsigned int j=0; j<seccount; ++j) {
             section_t* section=emma_get_section(&H,j);
-            printf("%3d) ",j);
+            printf("%3u) ",j);
             printf("%8"PRIx64"-ad ",section->addr);
             printf("%8"PRIx64"-of ",section->offset);
             printf("%8"PRIx64"-sz ",section->size);
@@ -116,7 +116,7 @@ int main(int argc,const char* argv[])
 
     unsigned int symcount=emma_symbol_count(&H);
     if (symcount>0) {
-        printf("Symbols (%d)\n",symcount);
+        printf("Symbols (%u)\n",symcount);
         for (unsigned int j=0; j<symcount; ++j) {
             symbol_t* symbol=emma_get_symbol(&H,j);
             printf("%8"PRIx64"-v ",symbol->value);

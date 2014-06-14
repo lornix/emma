@@ -242,7 +242,7 @@ static void parse_elf_header(emma_handle* H)
     }
     if (elf.e_version!=EV_CURRENT) {
         /* TODO:perhaps a 'problem' entry? */
-        fprintf(stderr,"WARN: Elf Header e_version (%d) != EV_CURRENT (%d)\n",
+        fprintf(stderr,"WARN: Elf Header e_version (%u) != EV_CURRENT (%u)\n",
                 elf.e_version,
                 EV_CURRENT);
     }
@@ -352,7 +352,7 @@ static void parse_section_header(emma_handle* H)
     unsigned int seccount=(*H)->section_count;
     if ((strindex==0)||(strindex>=seccount)) {
         /* TODO:perhaps a 'problem' entry? */
-        fprintf(stderr,"WARN: Program Header SHSTRINDEX not valid (%d of %d)\n",
+        fprintf(stderr,"WARN: Program Header SHSTRINDEX not valid (%u of %u)\n",
                 strindex,seccount);
         /* TODO: perhaps an option to search for proper segment? */
         /* it's USUALLY the FIRST type 3 section, with no flags set */
@@ -365,7 +365,7 @@ static void parse_section_header(emma_handle* H)
                 /* TODO:perhaps a 'problem' entry? */
                 strindex=i;
                 (*H)->section_string_index=i;
-                fprintf(stderr,"WARN: Program Header SHSTRINDEX fixed, set to %d\n",
+                fprintf(stderr,"WARN: Program Header SHSTRINDEX fixed, set to %u\n",
                         strindex);
                 break;
             }
@@ -444,6 +444,7 @@ int emma_open(emma_handle* H,const char* fname)
         err=read((*H)->fd,(void*)mm+mmoffset,(*H)->length);
         if (err<0) {
             /* read failed */
+            free(mm);
             close((*H)->fd);
             return 1;
         }
@@ -611,6 +612,7 @@ static int create_symbol(emma_handle* H,
     (*H)->symbols=realloc((*H)->symbols,sizeof(symbol_t*)*((*H)->symbol_count+1));
     if ((*H)->symbols==0) {
         /* realloc failed?!? */
+        free(savesymbol);
         return 1;
     }
     (*H)->symbols[(*H)->symbol_count]=savesymbol;
@@ -653,6 +655,7 @@ static int create_section(emma_handle* H,
     (*H)->sections=realloc((*H)->sections,sizeof(section_t*)*((*H)->section_count+1));
     if ((*H)->sections==0) {
         /* realloc failed?!? */
+        free(savesection);
         return 1;
     }
     (*H)->sections[(*H)->section_count]=savesection;
@@ -691,6 +694,7 @@ static int create_segment(emma_handle* H,
     (*H)->segments=realloc((*H)->segments,sizeof(segment_t*)*((*H)->segment_count+1));
     if ((*H)->segments==0) {
         /* realloc failed?!? */
+        free(savesegment);
         return 1;
     }
     (*H)->segments[(*H)->segment_count]=savesegment;
