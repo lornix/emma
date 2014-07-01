@@ -1,11 +1,11 @@
 #
-CFLAGS=-g -O0
+CFLAGS=-ggdb3 -O0
 CFLAGS+=-Wall -Wextra -Wunused
 #CFLAGS+=--save-temps
 #
 LDFLAGS=-lm
 #
-ASFLAGS=-g
+ASFLAGS=-ggdb3
 #
 AS=as
 CC:=gcc

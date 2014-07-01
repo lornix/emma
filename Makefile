@@ -11,7 +11,7 @@ CFLAGS=
 CFLAGS+=-std=gnu99
 #
 # pretty much always want debugging symbols included
-CFLAGS+=-g3
+CFLAGS+=-ggdb3
 #
 # optimize!
 #CFLAGS+=-O

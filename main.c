@@ -15,7 +15,7 @@ int main(int argc,const char* argv[])
 
     if (argc<2) {
         fprintf(stderr,"Please supply a filename to analyze\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     int arg=1;
     emma_handle H=emma_init();
@@ -129,5 +129,5 @@ int main(int argc,const char* argv[])
 
     emma_close(&H);
 
-    return 0;
+    return EXIT_SUCCESS;
 }
