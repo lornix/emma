@@ -6,7 +6,7 @@
 
 #include <stdio.h>
 #include <math.h>
-#include <stdlib.h> 
+#include <stdlib.h>
 #include <time.h>
 
 double pi = 3.14159;
@@ -120,10 +120,11 @@ time(&sekunnit);
 
  h = 12;
 
- printf("year %4d month %2d\n",(int)y,(int)m); 
+ printf("year %4d month %2d\n",(int)y,(int)m);
  printf("Input latitude, longitude and timezone\n");
- scanf("%f", &inlat); scanf("%f", &inlon); 
- scanf("%f", &intz);
+ scanf("%20f", &inlat);
+ scanf("%20f", &inlon);
+ scanf("%20f", &intz);
  latit = (double)inlat; longit = (double)inlon;
  tzone = (double)intz;
 
@@ -165,7 +166,7 @@ daylen = degs*ha/7.5;
 riset = 12.0 - 12.0 * ha/pi + tzone - longit/15.0 + equation/60.0;
 settm = 12.0 + 12.0 * ha/pi + tzone - longit/15.0 + equation/60.0;
 noont = riset + 12.0 * ha/pi;
-altmax = 90.0 + delta * degs - latit; 
+altmax = 90.0 + delta * degs - latit;
 // Correction for S HS suggested by David Smith
 // to express altitude as degrees from the N horizon
 if (latit < delta * degs) altmax = 180.0 - altmax;
@@ -195,7 +196,7 @@ showhrmn(riset); puts("");
 printf("Sun altitude ");
 // Amendment by D. Smith
 printf(" %.2f degr",altmax);
-printf(latit>=0.0 ? " South" : " North");
+printf(" %s",latit>=0.0 ? "South" : "North");
 printf(" at noontime "); showhrmn(noont); puts("");
 printf("Sunset        : ");
 showhrmn(settm);  puts("");

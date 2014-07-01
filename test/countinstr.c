@@ -16,10 +16,9 @@ int main(int argc,char* argv[])
     long long counter = 0;  /*  machine instruction counter */
     int wait_val;           /*  child's return value        */
     int pid;                /*  child's process id          */
-    char *arg0;             /* argv[0] pointer              */
 
     if (argc<2) {
-        arg0=basename(strdup(argv[0]));
+        char *arg0=basename(strdup(argv[0]));
         fprintf(stderr,"%s: Usage:\n\t%s prog [args] ...\n",arg0,arg0);
         return 1;
     }
