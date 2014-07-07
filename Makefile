@@ -13,10 +13,10 @@ CFLAGS+=-std=gnu99
 # pretty much always want debugging symbols included
 CFLAGS+=-ggdb3
 #
-# optimize!
-#CFLAGS+=-O
+# but only include libs as needed
+CFLAGS+=-Wl,--as-needed
 #
-# or not!
+# Optimize! or not!
 CFLAGS+=-O0
 #
 # yell out all warnings and whatnot
@@ -34,16 +34,15 @@ CFLAGS+=-Wsign-conversion
 #CFLAGS+=-flto
 #LDFLAGS+=-flto
 #
-# enable for gmon performance statistics
-#CFLAGS+=-pg
-#
-# preserve everything used to create binary, verbose assembly comments
+# sometimes we want to see it all
 #CFLAGS+=--save-temps -fverbose-asm
 #
 # das linker flags
-# LDFLAGS+=
-# LDFLAGS+=-lm
-# LDFLAGS+=-lbfd
+LDFLAGS+=
+#
+# needed libraries
+#LIBS+=-lm
+#LIBS+=-lbfd
 #
 # add environment CFLAGS to end so they take precedence
 CFLAGS+=$(SAVE_CFLAGS)
@@ -72,10 +71,10 @@ OBJS:=$(addsuffix .o,$(basename $(wildcard *.c)))
 HDRS:=$(wildcard *.h)
 
 $(BIN): $(OBJS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 %.o : %.c $(HDRS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) $(LDFLAGS) -c -o $@ $< $(LIBS)
 
 clean:
 	$(RM) $(BIN) $(OBJS)
@@ -123,5 +122,6 @@ allclean: clean testprogs-clean
 cov:
 	@ls *.gcda >/dev/null 2>&1 && gcov -r -a *.c | awk ' \
 		/^File/{ name=substr($$0, index($$0," ")); } \
-		/^Lines/{ if (name=="") { print "===" }; print substr($$0,1,index($$0,":")) " " substr($$0,index($$0,":")+1) name; name=""; } \
+		/^Lines/{ if (name=="") { print "===" }; \
+		print substr($$0,1,index($$0,":")) " " substr($$0,index($$0,":")+1) name; name=""; } \
 		{ next }' || echo "Try 'make coverage' first"
