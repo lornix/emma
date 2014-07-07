@@ -120,8 +120,17 @@ testprogs-clean:
 allclean: clean testprogs-clean
 
 cov:
-	@ls *.gcda >/dev/null 2>&1 && gcov -r -a *.c | awk ' \
-		/^File/{ name=substr($$0, index($$0," ")); } \
-		/^Lines/{ if (name=="") { print "===" }; \
-		print substr($$0,1,index($$0,":")) " " substr($$0,index($$0,":")+1) name; name=""; } \
-		{ next }' || echo "Try 'make coverage' first"
+	@ls *.gcda >/dev/null 2>&1 && \
+	gcov -r -a *.c | \
+	awk ' \
+	/^File/{ index_apost=index($$0,"\047")+1; \
+		name=" " substr($$0, index_apost,length($$0)-index_apost); } \
+	/^Lines/{ if (name=="") { print " ================" }; \
+		index_colon=index($$0,":")+1; \
+		percent=substr($$0,index_colon,index($$0,"%")-index_colon); \
+		line_count=substr($$0,4+index($$0," of ")); \
+		printf "%7.2f%% of %5d%s\n", \
+		percent, line_count, name; \
+		name=""; } \
+	{ next }' \
+	|| echo "Try 'make coverage' first"
