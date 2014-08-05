@@ -59,7 +59,7 @@ typedef struct segment_t {
     unsigned int flags;
 } segment_t;
 
-typedef struct {
+typedef struct struct_t {
     const char* filename;
     const char* memmap;
     uint64_t baseaddress;
